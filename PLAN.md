@@ -50,7 +50,7 @@ Live results were **reported by the owner's Codex test run** rather than fetched
 2. **Latest reset:** Show the newest recorded reset with timestamp, confidence/verification label, original evidence link and provider attribution.
 3. **Tibo signal:** Show a separate announcement card with source link and accurate classification (e.g. explicit plan, hint, policy change). Never turn a hint into a confirmed upcoming reset.
 4. **Honest state model:** Distinguish *upcoming announced*, *hint only*, *recorded*, *no record with complete coverage*, *unknown/stale*, and *provider unavailable*.
-5. **Freshness:** Show last checked/last updated; manual refresh plus conservative auto-refresh while the panel is open (initial target: every 3–5 minutes, subject to host support).
+5. **Freshness:** Show last checked/last updated; manual refresh plus conservative auto-refresh while the panel is open (initial target: every 10–15 minutes, subject to host support and upstream freshness).
 6. **Timezone:** Display in the viewer's IANA timezone when available, with a UTC fallback. Test `Australia/Sydney` and daylight-saving changes.
 7. **Read-only MCP tools:** At least `get_reset_radar` (summary/status) and `get_reset_history` (bounded history), with structured, traceable outputs.
 8. **Attribution:** Link to data providers and primary source posts; clearly state that Reset Radar is unofficial and unaffiliated with OpenAI.
@@ -183,7 +183,7 @@ Reset Radar supports two distinct distributions using **the same open-source cod
 - [ ] Build a compact Reset Radar view: status, latest signal, last recorded reset, provider freshness and original-post links.
 - [ ] Use an OpenAI `thread` entrypoint and the official MCP Apps host bridge.
 - [ ] Add loading, partial-data, stale, empty and offline states.
-- [ ] Add manual refresh; trial auto-refresh every 3–5 minutes *only while mounted*, if supported.
+- [ ] Add manual refresh; trial auto-refresh every 10–15 minutes *only while mounted*, if supported; do not fetch upstream per-user on every refresh when server caching can reuse a snapshot.
 - [ ] Support small panel widths, keyboard navigation, readable contrast and theme changes.
 - [ ] Use locale-aware time formatting, with UTC fallback.
 
