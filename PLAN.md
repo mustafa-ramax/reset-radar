@@ -114,6 +114,28 @@ ChatGPT conversation side panel
 
 Prefer simple SDK-compatible code over inventing framework abstractions. Confirm exact SDK versions and host support during implementation.
 
+### Deployment and distribution model (architectural requirement)
+
+Reset Radar supports two distinct distributions using **the same open-source codebase**:
+
+1. **Official hosted plugin:** The maintainer runs one production MCP service, registers that HTTPS endpoint with ChatGPT and (after approval) publishes it in the plugin directory. All installs of that official listing use the maintainer's hosted service and consume its quota/bandwidth. The production URL is **public/discoverable**, not a secret.
+2. **Self-hosted plugin:** Anyone can fork/clone the public repository, configure **their own** MCP origin and deploy to a Vercel account or another compatible HTTP host; their ChatGPT custom-plugin registration connects to their own endpoint. Self-hosting must not call or depend on the maintainer's MCP by default.
+
+**Portability requirements:**
+- Do **not** hardcode the maintainer's personal or production Vercel URL in reusable source, sample config, test fixtures or default values. Configure the public server origin via deployment environment/config (e.g. `MCP_PUBLIC_BASE_URL`, naming to be finalised in Phase 1); use documented placeholder origins in examples.
+- The eventual **official plugin submission** necessarily specifies the real production MCP URL. Treat this as public operational configuration, not a secret; keep it isolated from the reusable self-host setup, and use a stable endpoint before submission.
+- Document both official-install and self-host setup paths. A cloned installation should have no calls to the official MCP endpoint unless the developer explicitly chooses that endpoint.
+- Don't accidentally expose secrets: use managed environment variables where needed; commit only safe examples. No user accounts or secret tokens are expected for the initial public-data adapter.
+
+**Cost and abuse requirements:**
+- **MVP constraint: no unbounded maintainer hosting costs.** Start with Vercel Hobby for non-commercial personal testing, track use and reassess its current quotas/terms before a public launch; don't rely on a billing claim without checking the active plan.
+- Add conservative caching of upstream data, request timeouts, bounded payloads and rate limits/abuse protection before the public listing. Cache in a way that shares responses across clients where feasible rather than fetching both providers for every widget refresh.
+- Prefer manual refresh plus an initially slow polling interval; expose data freshness so caching isn't misleading. Re-evaluate interval only after measuring traffic.
+- Keep a clear maintenance/off switch or safe failure mode if quotas or upstream sources become unreliable; do not silently move to a paid tier.
+- Before submitting publicly, estimate realistic load, set alerts/usage limits where the platform supports them, and explicitly decide who will fund the official hosted endpoint if the audience grows.
+
+**Important trade-off:** Open sourcing alone does not cause traffic to hit the maintainer's service. Installing the **official hosted plugin** does. Endpoint configurability enables independent self-hosting but does **not** shield a public official endpoint from traffic.
+
 ## 6. Phases, tasks and acceptance gates
 
 ### Phase 0 — Verify sources & host capability (first)
@@ -127,9 +149,9 @@ Prefer simple SDK-compatible code over inventing framework abstractions. Confirm
 
 ### Phase 1 — Repository bootstrap
 
-- [ ] Add `README.md` (purpose, current limitations, setup, screenshots later).
+- [ ] Add `README.md` (purpose, current limitations, setup, screenshots later), including a self-hosting path and an explicit endpoint-config placeholder.
 - [ ] Add `LICENSE` (MIT), `.gitignore`, `.env.example` only if necessary.
-- [ ] Scaffold minimal TypeScript app, scripts, formatting, lint/typecheck and tests.
+- [ ] Scaffold minimal TypeScript app, scripts, formatting, lint/typecheck and tests; keep the MCP base URL configurable rather than hardcoding the maintainer's hostname.
 - [ ] Add a small architecture/data-contract note and contribution guidance when useful.
 - [ ] Keep commits focused, and do not introduce unnecessary services.
 
@@ -160,7 +182,7 @@ Prefer simple SDK-compatible code over inventing framework abstractions. Confirm
 ### Phase 4 — Personal Vercel deployment & ChatGPT integration
 
 - [ ] Resolve Vercel GitHub installation/repository access for `reset-radar`.
-- [ ] Import/link the public repo to the user's personal Vercel Hobby account.
+- [ ] Import/link the public repo to the user's personal Vercel Hobby account (non-commercial personal MVP), with an environment-configured MCP origin.
 - [ ] Deploy, verify HTTPS and MCP endpoint health.
 - [ ] Install as **personal custom MCP plugin**, without submitting to the public directory.
 - [ ] Open a new ChatGPT conversation, invoke the radar and verify the side panel.
@@ -182,6 +204,8 @@ Prefer simple SDK-compatible code over inventing framework abstractions. Confirm
 
 - [ ] Polish public README, screenshots, changelog, contributor docs and MIT attribution notices.
 - [ ] Confirm provider licensing and attribution for a public redistribution/use case.
+- [ ] Verify scaling, cost, limits, caching, abuse prevention, usage visibility and a safe shutdown option; don't open the official endpoint to unbounded public traffic by accident.
+- [ ] Verify both distribution paths: official install uses the maintainer's published endpoint; self-host installation uses only its operator-configured endpoint.
 - [ ] Add website, support page, privacy policy and terms as required for remote MCP submissions.
 - [ ] Complete developer identity verification and hosting/domain verification.
 - [ ] Package `plugin.json` and `mcp.json` with the correct publicly reachable MCP URL.
@@ -203,6 +227,8 @@ Prefer simple SDK-compatible code over inventing framework abstractions. Confirm
 - [ ] Requests avoid excessive polling; no personal data is collected or transmitted intentionally.
 - [ ] Links are safe and point to the cited provider/original source.
 - [ ] MCP server works independently of UI for Codex/tool-only clients.
+- [ ] Self-hosted clone points exclusively at its configured origin, never silently at the maintainer's hosted endpoint.
+- [ ] Conservative polling, cache and request throttling protect upstream providers and avoid unbounded public-hosted costs.
 
 ## 8. Risks and decisions
 
@@ -214,7 +240,9 @@ Prefer simple SDK-compatible code over inventing framework abstractions. Confirm
 | Plugin UI support in Codex differs from ChatGPT | MCP tools are a separate compatibility target; do not promise a visual panel in Codex. |
 | Provider feeds contain revisions, duplicates or ambiguous timestamps | Preserve original IDs and revisions, normalise conservatively, test edge cases. |
 | Vercel GitHub installation currently cannot see the new repo | After first commit, check/reconfigure installation permission and retry import. |
-| Vercel Hobby limits and non-commercial terms | Suitable for a personal non-commercial pilot within limits; reassess hosting before commercial operation/public scale. |
+| Vercel Hobby limits and non-commercial terms | Suitable for a personal non-commercial pilot within limits; reassess hosting before commercial operation/public scale. Protect the MVP from unbounded usage and do not assume public success is free. |
+| Popularity of the official plugin drives traffic to the maintainer's endpoint | Keep a self-host path, server-side cache, request limits, traffic visibility and a shutdown/fallback plan; gate public submission on an explicit sustainable hosting decision. |
+| Hardcoded MCP hostname makes open-source forks depend on the official deployment | Provide endpoint configuration without a maintainer-specific default; the official published URL is inherently public, not secret. |
 | Public plugin may require more than an MVP | Treat OpenAI submission requirements and review as a separate release gate. |
 
 ## 9. Project-management rules
@@ -224,6 +252,7 @@ Prefer simple SDK-compatible code over inventing framework abstractions. Confirm
 - Update checkboxes only for actually verified work, ideally in the same PR/commit.
 - Prefer documented evidence and links over assumptions about host support or resets.
 - Keep version one intentionally small; propose new features separately instead of silently expanding scope.
+- Make every infrastructure dependency optional/configurable when feasible, so self-hosting does not depend on the official service.
 - Use GitHub issues for concrete implementation tasks after the plan is agreed.
 - Avoid spending on services unless a real MVP blocker justifies it.
 
