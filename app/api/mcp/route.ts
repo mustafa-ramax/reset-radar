@@ -51,13 +51,6 @@ const handler = createMcpHandler(
         description: "Open a read-only Hello World MCP App in the ChatGPT conversation side panel. This is a compatibility test, not a live reset tracker.",
         inputSchema: z.object({}),
         annotations: { readOnlyHint: true, openWorldHint: false },
-        icons: [
-          {
-            src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Ccircle cx='24' cy='24' r='20' fill='%232563eb'/%3E%3Ccircle cx='24' cy='24' r='12' fill='none' stroke='white' stroke-width='2'/%3E%3Ccircle cx='24' cy='24' r='4' fill='white'/%3E%3Cpath d='M24 24 37 11' stroke='white' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E",
-            mimeType: "image/svg+xml",
-            sizes: ["48x48"],
-          },
-        ],
         _meta: {
           ui: { resourceUri: UI_URI },
           "openai/ui": { entrypoints: [{ type: "thread" }, { type: "global" }] },
