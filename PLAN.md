@@ -25,6 +25,12 @@ A private MCP plugin displays a usable panel in a real ChatGPT conversation, loa
 
 **Research findings documented:** [docs/phase-0-validation.md](docs/phase-0-validation.md). Official OpenAI `thread` panel metadata and Vercel MCP hosting are documented, and the upstream historical JSON fixture/licence and live-signal API contract have been inspected. **Phase 0 is not yet complete:** actual live JSON HTTP responses, an MCP transport round-trip and a panel in the user's ChatGPT account remain untested. Do not advance Phase 1 until the Phase 0 exit gate is met.
 
+### Phase 0 continuation — 15 October 2026
+
+The latest investigation identified **two existing read-only reset MCP candidates**: [tibo.cc/mcp](https://tibo.cc/guide/mcp) and [codex-reset.com/mcp](https://codex-reset.com/developers). We should test these before building a redundant data MCP. Neither has been proven to expose our required MCP Apps `thread` panel, so the likely approach remains a very thin, configurable **UI-owning bridge** that reuses publicly documented upstream data rather than collecting reset information ourselves. See [Phase 0 validation report](docs/phase-0-validation.md#f-phase-0-continuation--runtime-attempts-and-reusable-mcp-providers-15-october-2026).
+
+**Transport probe:** A disposable localhost JSON-RPC-shaped `initialize → tools/list → tools/call` cycle returned `pong`, but did not use an official MCP SDK/Inspector or HTTPS; the full transport gate is open. **Live API tests:** Blocked by DNS in the isolated execution environment, not proof of provider outage. **ChatGPT panel:** Still untested in the user's account. Do not mark Phase 0 complete or begin Phase 1 on this evidence alone.
+
 ## 2. Starting position (15 October 2026)
 
 - [x] Public GitHub repository created: `mustafa-ramax/reset-radar`.
@@ -140,12 +146,13 @@ Reset Radar supports two distinct distributions using **the same open-source cod
 
 ### Phase 0 — Verify sources & host capability (first)
 
-- [ ] Inspect both live APIs, data licences/attribution requirements and sample payloads.
+- [ ] Inspect live source API HTTP responses (including selected REST alternatives), licences, attribution requirements and sample payloads; research-only document inspections are recorded but live responses remain unverified.
+- [ ] Inspect and test the existing public MCP alternatives (`tibo.cc/mcp`, `codex-reset.com/mcp`), including tool metadata, freshness and whether they expose an MCP Apps `thread` resource. Prefer reuse where it truly reduces complexity.
 - [ ] Prove we can expose a basic MCP tool through a remote HTTPS server.
 - [ ] Confirm `thread` panel support in the user's current ChatGPT host and note unsupported hosts.
 - [ ] Finalise statuses and fallback behaviour based on actual provider fields.
 
-**Exit gate:** We can show a truthful snapshot from at least one provider, and have a clear path to test the panel. If thread panels are unavailable, keep the MCP tool MVP and defer UI rather than claim success.
+**Exit gate:** We can show a truthful snapshot from at least one provider via live endpoint verification, a compliant MCP Inspector or official SDK round-trip, and have a clear path to test the panel. If thread panels are unavailable, keep the MCP tool MVP and defer UI rather than claim success.
 
 ### Phase 1 — Repository bootstrap
 
