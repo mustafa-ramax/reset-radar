@@ -170,3 +170,69 @@ Additional research identified **two publicly documented, keyless, read-only rem
 
 **Phase 0 status: STILL OPEN.** A local toy protocol check and documentation lookup do not satisfy the live-host acceptance gate. No MVP scaffolding, Vercel deployment, public release or plugin installation has occurred.
 
+
+
+## G. Phase 0 verified live tests from user-run Codex (15 October 2026 AEDT)
+
+> **Evidence provenance:** The project owner ran the Phase 0 test prompt in Codex on Windows and supplied the full output for review on 15 October 2026. These are **reported results from the user’s external, network-enabled test**, not HTTP responses independently fetched in this ChatGPT runtime. The detailed raw terminal trace was not included, so values below are not independently replayed here. This section supersedes earlier environment-blocked *research attempts* in F1/F2/F5, while preserving them as an audit trail. No code, deployment or existing repository files were changed by Codex.
+
+### G1. Test environment and successful remote MCP calls
+
+- Windows build 26200; Python 3.11.15; **official MCP Python SDK 1.28.1**; HTTPX 0.28.1; TLS certificate verification enabled; identifying User-Agent; bounded timeouts.
+- \`https://tibo.cc/mcp\`: TLS and official SDK **PASS**. Initialised as server \`TIBO\` v1.6.7; negotiated MCP protocol \`2025-11-25\`. \`tools/list\` advertised \`get_current_status\`, \`get_latest_reset\`, \`get_reset_history\`. Calls to status and latest reset passed. At test time status included \`scheduled_reset=null\`, \`active_watch=null\`, \`stale=false\`, \`upstream_status=ok\`, source links and explicit cache/fetch timestamps.
+- \`https://codex-reset.com/mcp\`: TLS and official SDK **PASS**. Initialised as \`codex-reset\` v1.0.0; negotiated \`2025-06-18\`. Tools: \`get_reset_forecast\`, \`get_reset_timeline\`, \`get_codex_status\`. Calls to forecast and two-event timeline passed. Forecast was explicitly experimental, confidence low, and **not** a confirmed announcement.
+- Both returned HTTP 200 for MCP call flows and accepted the initialised notification with HTTP 202. Neither required login in the tested read-only flows.
+- **MCP UI metadata:** Neither server advertised a UI resource in its inspected tool metadata, an \`openai/ui\` entrypoint, or a \`thread\` panel. TIBO returned empty resource and template lists; codex-reset.com did not implement resource methods. The standard SDK probe does not rule out conditional metadata for a different client, but no existing panel was demonstrated.
+- Tested integrations were **third-party server clients**, not our own MCP server and not a ChatGPT-side panel.
+
+### G2. REST endpoint results (user-run Codex, approximately 22:18–22:21 AEDT)
+
+| Endpoint | Observed response | What it means for Reset Radar |
+| --- | --- | --- |
+| \`https://whenresets.net/ledger.json\` | **200 JSON**; \`schema=whenresets.ledger/1\`; 67 rows (64 resets, 3 policy notes); \`Cache-Control: public,max-age=300\`; wildcard CORS | Historical fallback. Four rows lacked original source URLs. The newest \`datetime_utc\` is a **monitoring observation**, and the reported \`generated_at\` is date-level, not a precise refresh clock. |
+| \`https://whenresets.com/api/v1/tibo\` | **404 HTML** | **Exclude from default live-signal integration.** Do not parse the error page as JSON. |
+| \`https://whenresets.com/api/v1/archive\` | **200 JSON**; \`archive-v1\`; 92 rows | Contract/quality issues: static \`wr-snapshot-live\` snapshot id while generated timestamp changes, missing claimed evidence, repeated source URLs/actions, and at least one evidently misclassified release notice. Not a trustworthy default. |
+| \`https://whenresets.com/api/v1/status\` | **200 JSON** (legacy structure) | Missing documented \`source_signals\` and \`signal_source\`; not a usable signal fallback as specified. |
+| \`https://tibo.cc/api/v1/status\` | **200 JSON** | **Preferred status source**, with freshness, upstream status and source/announcement distinctions. |
+| \`https://codex-reset.com/api/feed\` | **200 JSON** | **Preferred announcement-context source**, with captured posts and current/inactive signals; provider attribution required. |
+| \`https://codex-reset.com/api/timeline\` | **200 JSON** | Optional history/cross-check; includes pending records that must not count as executed resets. |
+
+Additional observed headers: codex-reset.com REST published \`max-age=60\` and source-check timestamps; .net ledger \`max-age=300\`; .com archive/status \`max-age=30\`/15 seconds with stale-while-revalidate. None of these short tests proves long-term reliability or completeness.
+
+### G3. Important timestamp and semantics discrepancy
+
+For an apparent 15 October event, the provider snapshots represented at least four distinct events/times:
+
+| Provider | UTC timestamp | Meaning in that source |
+| --- | --- | --- |
+| whenresets.com archive | \`04:55:51\` | Initial announcement post labelled as effective, without independent evidence |
+| whenresets.net ledger | \`06:13:01\` | Monitoring observation |
+| codex-reset.com timeline | \`06:13:01\` | Monitoring arrival, misleadingly named \`announced_at\` |
+| tibo.cc status | \`06:28:13\` | Completion-post publication |
+
+**Decision:** Never take \`effective_at\` or \`announced_at\` field names alone as proof of an exact universal reset time. Preserve each provider's observation type and original source link. We can report “observed around” or “completion post at” with explicit labels; do not merge these into a fabricated exact timestamp.
+
+### G4. Architecture decision (approved for subsequent implementation)
+
+- **Select Option B:** A very small, independently self-hostable **MCP/UI bridge** with configurable public origin. It owns our MCP Apps UI resource, \`thread\` metadata, status normalisation, bounded tools and display of attribution/freshness/uncertainty.
+- **Do not build collectors, scrapers, storage, a forecast algorithm, user accounts or a separate polling daemon for MVP.**
+- **Prefer upstream REST** from the bridge over calling their existing MCP servers: fewer protocol round-trips, less parsing, simple caching.
+- Source priority: \`tibo.cc/api/v1/status\` for status; \`codex-reset.com/api/feed\` for announcement context; \`whenresets.net/ledger.json\` for historical fallback. Optional \`codex-reset.com/api/timeline\` only when justified.
+- \`whenresets.com\` is **excluded from v0.1 default path** unless independently revalidated later, not claimed permanently broken.
+- Upstream dependencies are not guarantees. Maintain a truthful *unknown/stale* state when source coverage is absent or endpoints fail.
+- Respect provider-specific polling requirements, credit and any eventual fair-use restrictions. Current sources depend on other trackers, so do not claim independent official verification.
+- Both tested upstream MCPs lack the desired custom UI, so **a UI-owning bridge is still required** for our chosen user experience. Vercel is convenient, not a protocol requirement.
+- Continue the prior decision: official hosted plugin and self-hosted open-source variant share the same code, with no built-in dependency on the maintainer's hosted MCP endpoint.
+
+### G5. Phase boundary recommendation
+
+This testing **completes the data-source and existing-remote-MCP feasibility investigation**. Remaining tasks that require us to **write, deploy and install a new MCP Apps UI** are implementation/integration verification, not a reason to keep researching indefinitely.
+
+**Research/architecture gate can close** based on the user-run MCP SDK and REST results, with these declared deferred risks:
+- New Reset Radar MCP endpoint has **not** been written or proven with the official SDK.
+- Real ChatGPT \`thread\` panel has **not** been rendered in the user's account; compatibility and persistence are unknown.
+- Fault injection, throttling/429, full provider completeness, error-state UI and Windows/Mac/Codex host support still need implementation-stage testing.
+
+These become explicit **Phase 2, Phase 3, Phase 4 and Phase 5 acceptance gates**, not claims of completed functionality.
+
+**Phase 0 verdict:** **COMPLETE FOR FEASIBILITY AND PROVIDER SELECTION**; actual app and host functionality remains **UNVERIFIED**, by design. If implementation-stage smoke testing reveals the target host lacks the \`thread\` extension, pause the panel feature and document the tool-only fallback.
