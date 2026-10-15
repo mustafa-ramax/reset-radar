@@ -29,6 +29,12 @@ A private MCP plugin displays a usable panel in a real ChatGPT conversation, loa
 
 Live results were **reported by the owner's Codex test run** rather than fetched directly in this ChatGPT execution environment. Previous isolated-environment DNS failures and preliminary protocol checks remain documented as historical attempts. Existing upstream MCP clients completed a real SDK round-trip, but our own MCP endpoint is not yet built. Real ChatGPT `thread` rendering belongs to **Phase 4 integration**, not an impossible prerequisite for starting Phase 1. If the panel is unsupported in the account, record that failure and fall back to tool-only support rather than asserting success.
 
+### Early integration smoke test (15 October 2026)
+
+To reduce product risk, we started a **minimal Hello World panel test before the data/dashboard work**. One static `ui://reset-radar/hello.html` resource and a read-only `show_reset_radar_hello` tool are committed. A Vercel deployment of the GitHub `main` branch reached `READY` (project `reset-radar`; test MCP URL `https://reset-radar-eight.vercel.app/api/mcp`). **No upstream reset API calls exist in this build.**
+
+**Still unverified:** live MCP initialize/list/call against *our* endpoint, Vercel deployment-protection accessibility from ChatGPT, and actual `thread` side-panel rendering in the user's account. The project currently reports SSO protection `all_except_custom_domains`; verify public reachability before personal plugin installation. Treat a build-ready status as build success only. Do not start the full radar until the panel gate has passed or its limitations are understood.
+
 ## 2. Starting position (15 October 2026)
 
 - [x] Public GitHub repository created: `mustafa-ramax/reset-radar`.
