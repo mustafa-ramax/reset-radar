@@ -105,3 +105,68 @@ These items deliberately remain unchecked; don't mark them complete from documen
 - **Production/public release readiness:** Not assessed.
 
 If a later test contradicts a published data contract, update this report with the observed behaviour and date rather than silently coding around the discrepancy.
+
+## F. Phase 0 continuation — runtime attempts and reusable MCP providers (15 October 2026)
+
+### F1. Direct live source tests: blocked by execution environment, not proven service outage
+
+Attempted HTTP GET requests to:
+
+- `https://whenresets.net/ledger.json`
+- `https://whenresets.com/api/v1/tibo`
+- `https://whenresets.com/api/v1/archive`
+- `https://whenresets.com/api/v1/status`
+
+**Outcome:** the local isolated runtime failed at DNS resolution (`NameResolutionError` / `Temporary failure in name resolution`) for all tested public domains, including independent controls such as `registry.npmjs.org` and `api.github.com`. Web research returned pages for site and developer documentation but **did not return live JSON bodies or HTTP headers** for the API URLs (cache miss/inaccessible). Thus their **HTTP status, current JSON payload, CORS, freshness and cache headers remain unverified**. Do not describe these sources as offline or healthy based on these attempts.
+
+The separately indexed `https://whenresets.net/` HTML page claims 64 recorded events and an observed event on 15 October 2026, but this **cannot be substituted for a fresh verified API response**.
+
+### F2. Disposable local JSON-RPC/MCP-shaped transport check: PASS with caveat
+
+Executed a disposable Node.js HTTP listener bound to **127.0.0.1** (ephemeral port) that implemented these minimal JSON-RPC method shapes, then called them from an independent Python HTTP client:
+
+| Method | Result |
+| --- | --- |
+| `initialize` | HTTP 200; response advertises `protocolVersion: 2025-06-18` and `tools` capability |
+| `tools/list` | HTTP 200; returns a read-only `phase0_ping` tool with an input schema |
+| `tools/call` | HTTP 200; returns `pong` |
+  
+**Scope and limits:** Demonstrates local request/response plumbing and can inform our HTTP test cases. It was **not built with the MCP SDK**, was **not tested using MCP Inspector**, did **not use HTTPS**, did **not validate full transport compliance/session negotiation**, and was **not connected to ChatGPT**. The disposable script was kept outside the repository; no Vercel project or billable service was created. The full Phase 0 `MCP transport smoke test` gate remains open.
+
+### F3. Existing remote MCPs: check before duplicating work
+
+Additional research identified **two publicly documented, keyless, read-only remote Streamable HTTP MCP services**:
+
+| Provider | Documented endpoint | Tools / role |
+| --- | --- | --- |
+| [TIBO](https://tibo.cc/guide/mcp) | `https://tibo.cc/mcp` | `get_current_status`, `get_latest_reset`, `get_reset_history` |
+| [codex-reset.com](https://codex-reset.com/developers) | `https://codex-reset.com/mcp` | `get_reset_forecast`, `get_reset_timeline`, `get_codex_status` |
+
+- **Not yet connected to either:** live `initialize`, `tools/list`, `tools/call` and the advertised tool metadata still require verification.
+- Their developer docs describe **tool/data access**, not a provided MCP Apps UI resource plus an OpenAI `thread` entrypoint. **Do not assume a ready-made side panel exists.**
+- These services could replace part of Reset Radar's data-adapter work, or be used as optional sources. A public, self-hostable **thin MCP/UI bridge** remains the likely minimum if we insist on our *own* conversation-side panel, because the bridge must serve our UI resource and attach the `thread` tool metadata.
+- For an MCP intermediary, prefer comparing the cost/latency/reliability of calling upstream MCP tools versus their public **REST equivalents**. The simpler REST path may avoid protocol translation, but always follow attribution and request-rate terms. `codex-reset.com` requests provider credit and a caller-identifying User-Agent, and asks API consumers not to poll faster than once per minute. `tibo.cc` documents rate limits and a stale-cache policy.
+- Neither source is official OpenAI account telemetry. A forecast is not a reset guarantee.
+- Don't silently replace the two originally shortlisted providers; assess source overlap, licences, verification fields, freshness and fallback behaviour first.
+
+**Design decision:** Minimise *our* hosted MCP to presentation/normalisation and read-only access; don't rebuild scraping, history collection or forecasts already available elsewhere. Keep hosted and self-hosted URL configuration independent.
+
+### F4. ChatGPT panel and latest handler support confirmed from docs, not host tested
+
+- [OpenAI Plugin Extensions](https://developers.openai.com/plugins/build/extensions) documents `"openai/ui": { "entrypoints": [{"type":"thread"}] }` in tool metadata for conversation panels (with an attached UI resource).
+- [OpenAI MCP server/UI quickstart](https://developers.openai.com/plugins/build/app-quickstart) documents custom-plugin setup; the user must take the installation action in their own ChatGPT UI. **No such installation or side-panel rendering has happened yet.**
+- [Vercel mcp-handler 2.0 changelog, 30 July 2026](https://vercel.com/changelog/latest-mcp-spec-now-supported-in-mcp-handler) supports MCP spec 2026-07-28, with backward compatibility for 2025 Streamable HTTP clients. Check actual compatible runtime and SDK versions at bootstrap; don't blindly pin an older example.
+
+### F5. Revised outstanding Phase 0 gate
+
+- [x] Verify that OpenAI documents the `thread` panel surface and Vercel documents MCP hosting.
+- [x] Research existing publicly documented read-only reset MCP servers (without claiming they were executed).
+- [x] Run a **local minimal JSON-RPC-shaped** round-trip as a protocol-plumbing sanity check only.
+- [ ] Execute live HTTP GETs from a network-enabled environment and save redacted API response metadata/fixtures for all selected sources.
+- [ ] Perform a compliant Streamable HTTP `initialize` / `tools/list` / `tools/call` round-trip using the official SDK/Inspector against a real endpoint (prefer testing one existing source first).
+- [ ] Determine whether any existing MCP advertises an MCP Apps `ui.resourceUri` and OpenAI `thread` metadata; do not infer from marketing docs.
+- [ ] Create/test a **temporary** UI/host smoke-test plugin (only as required) and have the user install it explicitly to verify the conversation panel in their ChatGPT account. This step does not authorise public submission.
+- [ ] Document observed results and decide the minimum data-adapter/bridge responsibilities.
+
+**Phase 0 status: STILL OPEN.** A local toy protocol check and documentation lookup do not satisfy the live-host acceptance gate. No MVP scaffolding, Vercel deployment, public release or plugin installation has occurred.
+
