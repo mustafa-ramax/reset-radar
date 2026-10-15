@@ -21,22 +21,20 @@ The radar should let someone glance at:
 
 A private MCP plugin displays a usable panel in a real ChatGPT conversation, loads current public data without a user account, handles missing or contradictory information honestly, and works in at least one supported ChatGPT host. No paid services or background monitoring are needed for MVP.
 
-## Phase 0 research update (15 October 2026)
+## Phase 0 research and validation (15 October 2026)
 
-**Research findings documented:** [docs/phase-0-validation.md](docs/phase-0-validation.md). Official OpenAI `thread` panel metadata and Vercel MCP hosting are documented, and the upstream historical JSON fixture/licence and live-signal API contract have been inspected. **Phase 0 is not yet complete:** actual live JSON HTTP responses, an MCP transport round-trip and a panel in the user's ChatGPT account remain untested. Do not advance Phase 1 until the Phase 0 exit gate is met.
+**Outcome: COMPLETE for research and architecture selection, based on the owner's live Codex tests.** The [Phase 0 validation report](docs/phase-0-validation.md#g-phase-0-verified-live-tests-from-user-run-codex-15-october-2026-aedt) records successful official-SDK connections to two existing remote MCP services and HTTP tests of the intended JSON providers. The legacy whenresets.com signal path failed and is excluded from the default MVP. The upstream services do not advertise the custom UI panel, so we will build a **thin MCP/UI bridge** using existing REST data. **This does not claim our new endpoint, ChatGPT panel, cross-platform support or deployments are tested**: those are later phase gates.
 
-### Phase 0 continuation — 15 October 2026
+### Verification boundary
 
-The latest investigation identified **two existing read-only reset MCP candidates**: [tibo.cc/mcp](https://tibo.cc/guide/mcp) and [codex-reset.com/mcp](https://codex-reset.com/developers). We should test these before building a redundant data MCP. Neither has been proven to expose our required MCP Apps `thread` panel, so the likely approach remains a very thin, configurable **UI-owning bridge** that reuses publicly documented upstream data rather than collecting reset information ourselves. See [Phase 0 validation report](docs/phase-0-validation.md#f-phase-0-continuation--runtime-attempts-and-reusable-mcp-providers-15-october-2026).
-
-**Transport probe:** A disposable localhost JSON-RPC-shaped `initialize → tools/list → tools/call` cycle returned `pong`, but did not use an official MCP SDK/Inspector or HTTPS; the full transport gate is open. **Live API tests:** Blocked by DNS in the isolated execution environment, not proof of provider outage. **ChatGPT panel:** Still untested in the user's account. Do not mark Phase 0 complete or begin Phase 1 on this evidence alone.
+Live results were **reported by the owner's Codex test run** rather than fetched directly in this ChatGPT execution environment. Previous isolated-environment DNS failures and preliminary protocol checks remain documented as historical attempts. Existing upstream MCP clients completed a real SDK round-trip, but our own MCP endpoint is not yet built. Real ChatGPT `thread` rendering belongs to **Phase 4 integration**, not an impossible prerequisite for starting Phase 1. If the panel is unsupported in the account, record that failure and fall back to tool-only support rather than asserting success.
 
 ## 2. Starting position (15 October 2026)
 
 - [x] Public GitHub repository created: `mustafa-ramax/reset-radar`.
 - [x] GitHub and Vercel connectors are available.
 - [x] Vercel Hobby account identified.
-- [ ] Source data contracts tested from a runnable app.
+- [x] Upstream MCP services and source REST data tested by owner's Codex (see Phase 0 report); our own app remains unbuilt.
 - [ ] Initial code, README, licence and tests added.
 - [ ] Vercel project linked to GitHub (repo not currently visible to Vercel Git import).
 - [ ] Personal MCP plugin installed and conversation-side panel verified.
@@ -69,12 +67,15 @@ The latest investigation identified **two existing read-only reset MCP candidate
 
 ## 4. Data strategy and safety rules
 
-The two domains below are **different independent providers**, not redundant mirrors.
+Selected v0.1 sources, based on live tests by the owner's Codex:
 
 | Provider | Intended purpose | Integration caveat |
 | --- | --- | --- |
-| [whenresets.net/ledger.json](https://whenresets.net/ledger.json) | Recorded reset history | Historical feed can lag; do not use it as an announcement feed. Its [source repository](https://github.com/kosanhu2021-source/codex-reset-ledger) documents schema `whenresets.ledger/1` and MIT licensing. |
-| [whenresets.com API](https://whenresets.com/developers) | Captured Tibo signals, archived events, coverage | Prefer `/api/v1/tibo` for signals and `/api/v1/archive` for archive/coverage. Respect missing, stale, throttled or incomplete responses. Confirm live endpoint behaviour before using it as a source of truth. |
+| [tibo.cc/api/v1/status](https://tibo.cc/api/v1/status) | Primary status card | Rich stale/fetch/upstream metadata; it relays other tracker data, not personal-account telemetry. |
+| [codex-reset.com/api/feed](https://codex-reset.com/api/feed) | Captured Tibo announcements | Distinguish current from inactive hints and posts; require attribution. Never treat experimental forecasts as confirmed signals. |
+| [whenresets.net/ledger.json](https://whenresets.net/ledger.json) | Recorded reset history/fallback | Historical feed has some missing original links and ambiguous timestamp meanings; its [source repo](https://github.com/kosanhu2021-source/codex-reset-ledger) is MIT-licensed. |
+
+**Not selected for the default integration:** [whenresets.com](https://whenresets.com/developers). Its documented `/api/v1/tibo` returned 404 HTML, `/api/v1/status` lacked advertised signal fields, and `/api/v1/archive` had contract/classification issues in the 15 October test. Reconsider only after revalidation. The similarly spelled `codex-resets.com` (a different upstream mentioned by TIBO) is **not** the same domain as `codex-reset.com`.
 
 ### Contract validation is mandatory (first technical gate)
 
@@ -86,7 +87,8 @@ The two domains below are **different independent providers**, not redundant mir
 - Do not invent `effective_at`, affected plans, global scope, or a missing time of day. If the source gives only a date, show only the date.
 - Source errors, empty signals with stale coverage, and slow updates must result in **unknown/unavailable**, not “no reset”.
 - Use server-side fetch with bounded timeouts, short caching, retry/backoff for transient failures and respectful request rates. No external API keys should be necessary for public reads.
-- Show provider attribution and link to underlying evidence. Follow each provider's reuse terms (the .com API requires snapshot/version attribution).
+- Show provider attribution and link to underlying evidence. Respect TIBO and Codex Reset's usage/attribution guidance; retain original post/source links. Do not claim the MIT licence over the .net dataset grants rights to third-party post text.
+- Preserve distinct **post published**, **monitoring observed**, and **completion post** time semantics: providers disagreed about the exact 15 October event time. Avoid inventing a universal `effective_at`.
 
 ### Normalised internal model (conceptual)
 
@@ -107,8 +109,9 @@ ChatGPT conversation side panel
         └─ Read-only MCP tools / HTTP
             └─ Next.js + Vercel Functions (Streamable HTTP MCP endpoint)
                 └─ Source adapters
-                    ├─ whenresets.net ledger.json
-                    └─ whenresets.com archive / tibo
+                    ├─ tibo.cc status REST
+                    ├─ codex-reset.com feed REST
+                    └─ whenresets.net ledger JSON (history)
 ```
 
 - **Frontend:** React + TypeScript UI hosted as an MCP Apps resource; use the standard MCP Apps bridge and OpenAI MCP Extensions for the optional `thread` entrypoint.
@@ -144,15 +147,15 @@ Reset Radar supports two distinct distributions using **the same open-source cod
 
 ## 6. Phases, tasks and acceptance gates
 
-### Phase 0 — Verify sources & host capability (first)
+### Phase 0 — Verify source and MCP/UI feasibility (research complete)
 
-- [ ] Inspect live source API HTTP responses (including selected REST alternatives), licences, attribution requirements and sample payloads; research-only document inspections are recorded but live responses remain unverified.
-- [ ] Inspect and test the existing public MCP alternatives (`tibo.cc/mcp`, `codex-reset.com/mcp`), including tool metadata, freshness and whether they expose an MCP Apps `thread` resource. Prefer reuse where it truly reduces complexity.
-- [ ] Prove we can expose a basic MCP tool through a remote HTTPS server.
-- [ ] Confirm `thread` panel support in the user's current ChatGPT host and note unsupported hosts.
-- [ ] Finalise statuses and fallback behaviour based on actual provider fields.
+- [x] Inspect live JSON REST providers and their published contracts, licensing/attribution considerations, schemas and headers via the owner's network-enabled Codex.
+- [x] Connect to `tibo.cc/mcp` and `codex-reset.com/mcp` with an official MCP SDK; inspect tools, metadata and returned data.
+- [x] Establish that neither inspected existing MCP advertises the required UI resource or `thread` entrypoint. Confirm OpenAI documents that entrypoint and Vercel supports remote MCP hosting.
+- [x] Choose an initial provider priority and document safe unknown, stale, announcement and timestamp semantics.
+- [x] Decide to use a minimal MCP/UI bridge with upstream REST, rather than build a data collection backend.
 
-**Exit gate:** We can show a truthful snapshot from at least one provider via live endpoint verification, a compliant MCP Inspector or official SDK round-trip, and have a clear path to test the panel. If thread panels are unavailable, keep the MCP tool MVP and defer UI rather than claim success.
+**Exit gate: PASSED for research/feasibility.** Based on user-run 15 October tests; see [validated findings](docs/phase-0-validation.md#g-phase-0-verified-live-tests-from-user-run-codex-15-october-2026-aedt). **Our own HTTPS MCP endpoint** will be tested during Phase 2/4 and the **real ChatGPT conversation panel** during Phase 4. Neither is claimed complete here.
 
 ### Phase 1 — Repository bootstrap
 
@@ -166,11 +169,11 @@ Reset Radar supports two distinct distributions using **the same open-source cod
 
 ### Phase 2 — Data adapters and MCP tools
 
-- [ ] Fetch and validate ledger history.
-- [ ] Fetch and validate Tibo signals and independent archive/coverage metadata where available.
+- [ ] Fetch and runtime-validate TIBO status, Codex Reset feed, and .net ledger history against samples recorded during Phase 0.
+- [ ] Map source freshness/coverage semantics; do not assume a null announcement indicates complete monitoring. Keep archive/signal fallback explicit.
 - [ ] Normalise events and avoid double counting.
 - [ ] Implement cache, timeout, error and stale-data handling.
-- [ ] Implement `get_reset_radar` and bounded `get_reset_history`.
+- [ ] Implement `get_reset_radar` and bounded `get_reset_history`, with independently runnable HTTPS Streamable HTTP MCP tool calls tested using official SDK/Inspector.
 - [ ] Add fixture-based tests for historical timestamps, duplicate announcements, unknown time, provider outage, HTTP 429, and incomplete coverage.
 
 **Exit gate:** MCP Inspector returns traceable, accurate values and passes failure-case tests.
@@ -192,7 +195,7 @@ Reset Radar supports two distinct distributions using **the same open-source cod
 - [ ] Import/link the public repo to the user's personal Vercel Hobby account (non-commercial personal MVP), with an environment-configured MCP origin.
 - [ ] Deploy, verify HTTPS and MCP endpoint health.
 - [ ] Install as **personal custom MCP plugin**, without submitting to the public directory.
-- [ ] Open a new ChatGPT conversation, invoke the radar and verify the side panel.
+- [ ] Open a new ChatGPT conversation, invoke the radar and **verify the real `thread` panel** in the user's account; explicitly record unsupported host outcomes.
 - [ ] Validate source links, live refresh, host restrictions and response/error paths.
 
 **Exit gate:** The radar is usable from a real ChatGPT chat and remains read-only. Record the deployed URL only after confirmed deployment.
@@ -265,7 +268,7 @@ Reset Radar supports two distinct distributions using **the same open-source cod
 
 ## 10. First implementation task
 
-**Start with Phase 0.** Verify the current provider JSON contracts and MCP conversation-panel support, capture fixtures, and document uncertainties. Then bootstrap the repo (Phase 1). Do **not** begin with public plugin submission, notification infrastructure or a design overhaul.
+**Start with Phase 1 — repository bootstrap.** Phase 0's live provider and existing-MCP feasibility research has passed; preserve the recorded evidence and limitations. Scaffold the smallest reusable TypeScript MCP/UI foundation and tests, without deploying yet. Defer live panel installation/render verification to Phase 4; do **not** begin with public plugin submission, notification infrastructure or a design overhaul.
 
 ## Reference documentation
 
@@ -275,7 +278,9 @@ Reset Radar supports two distinct distributions using **the same open-source cod
 - [Vercel MCP deployment guidance](https://vercel.com/docs/mcp/deploy-mcp-servers-to-vercel)
 - [Vercel Hobby limits and usage terms](https://vercel.com/docs/plans/hobby)
 - [Codex Reset Ledger source repository](https://github.com/kosanhu2021-source/codex-reset-ledger)
-- [WhenResets public API/developer contract](https://whenresets.com/developers)
+- [TIBO API documentation](https://tibo.cc/guide/api)
+- [Codex Reset developer documentation](https://codex-reset.com/developers)
+- [WhenResets public API/developer contract (excluded from v0.1 default sources)](https://whenresets.com/developers)
 
 ---
 
