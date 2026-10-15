@@ -21,6 +21,10 @@ The radar should let someone glance at:
 
 A private MCP plugin displays a usable panel in a real ChatGPT conversation, loads current public data without a user account, handles missing or contradictory information honestly, and works in at least one supported ChatGPT host. No paid services or background monitoring are needed for MVP.
 
+## Phase 0 research update (15 October 2026)
+
+**Research findings documented:** [docs/phase-0-validation.md](docs/phase-0-validation.md). Official OpenAI `thread` panel metadata and Vercel MCP hosting are documented, and the upstream historical JSON fixture/licence and live-signal API contract have been inspected. **Phase 0 is not yet complete:** actual live JSON HTTP responses, an MCP transport round-trip and a panel in the user's ChatGPT account remain untested. Do not advance Phase 1 until the Phase 0 exit gate is met.
+
 ## 2. Starting position (15 October 2026)
 
 - [x] Public GitHub repository created: `mustafa-ramax/reset-radar`.
