@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
+  <title>Reset Radar</title>
+  <style>
+    :root { font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; color-scheme: light dark; font-synthesis: none; }
+    * { box-sizing: border-box; }
+    body { margin:0; padding: 20px 14px 28px; background:Canvas; color:CanvasText; font-size:14px; }
+    .wrap { width:100%; max-width:640px; margin:0 auto; display:grid; gap:14px; }
+    .head {display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;}
+    .brand {display:flex; align-items:center; gap:10px; min-width:0}
+    .mark {display:grid; place-items:center; width:38px; height:38px; border-radius:13px; background:#0f766e; color:white; flex-shrink:0;}
+    h1 {font-size:19px; letter-spacing:-.035em; margin:0; line-height:1.2;}
+    .sub {margin:4px 0 0; color:GrayText; font-size:12px;}
+    .refresh {border:1px solid color-mix(in srgb, CanvasText 17%, transparent); border-radius:10px; background:Canvas; color:CanvasText; cursor:pointer; font:600 12px inherit; padding:9px 12px; font-weight:600; min-height:36px;}
+    .refresh:hover:not(:disabled), a:hover { opacity:.78; }
+    .refresh:disabled { cursor:wait; opacity:.55; }
+    .refresh:focus-visible, a:focus-visible {outline:2px solid #0d9488; outline-offset:3px;}
+    .card {border:1px solid color-mix(in srgb, CanvasText 15%, transparent); background:color-mix(in srgb, Canvas 96%, CanvasText 4%); border-radius:16px; padding:19px; min-width:0;}
+    .card.big {background:color-mix(in srgb, Canvas 96%, #0d9488 4%);}
+    .row {display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;}
+    .eyebrow {font-size:11px; font-weight:750; letter-spacing:.095em; text-transform:uppercase; color:GrayText;}
+    .pill {font-size:11px; font-weight:700; border-radius:99px; padding:5px 9px; background:color-mix(in srgb, CanvasText 9%, Canvas); color:CanvasText;}
+    .pill.available {color:#0f766e; background:color-mix(in srgb, #10b981 13%, Canvas);}
+    .pill.stale {color:#b45309; background:color-mix(in srgb, #f59e0b 15%, Canvas);}
+    .pill.unavailable {color:#b91c1c; background:color-mix(in srgb, #ef4444 13%, Canvas);}
+    .main-value {margin:14px 0 5px; font-size:clamp(21px,5vw,31px); font-weight:760; letter-spacing:-.045em; line-height:1.18; overflow-wrap:anywhere;}
+    .detail {line-height:1.55; font-size:13px; color:GrayText;}
+    .quote {color:CanvasText; margin:14px 0; font-size:13px; line-height:1.55; overflow-wrap:anywhere;}
+    .link {font-size:12px; font-weight:650; color:#0d9488; text-decoration:underline; text-underline-offset:3px; word-break:break-all;}
+    .link[hidden] {display:none;}
+    .pending-value {font-size:15px; font-weight:720; margin:10px 0 5px;}
+    .small {font-size:12px; color:GrayText; line-height:1.5;}
+    .meta {display:grid; grid-template-columns:minmax(0,1fr) auto; gap:9px; font-size:12px; line-height:1.45;}
+    .meta .key {color:GrayText;}
+    .meta .val {text-align:right; max-width:190px; overflow-wrap:anywhere;}
+    .note {border-radius:11px; padding:12px; font-size:12px; line-height:1.55; color:GrayText; background:color-mix(in srgb, CanvasText 5%, Canvas);}
+    .warning {color:#b45309; border:1px solid color-mix(in srgb, #f59e0b 30%, transparent);}
+    .footer {text-align:center; margin:0; font-size:11px; line-height:1.6; color:GrayText;}
+    @media (max-width:380px) {body {padding:12px 10px;} .card {padding:15px;} .refresh {padding:8px;} }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <header class="head">
+      <div class="brand">
+        <span class="mark" aria-hidden="true">◎</span>
+        <div><h1>Reset Radar</h1><p class="sub">Community signals · powered by TIBO</p></div>
+      </div>
+      <button class="refresh" id="refresh" type="button">↻ Refresh</button>
+    </header>
+
+    <section class="card big" aria-labelledby="last-title">
+      <div class="row"><span class="eyebrow" id="last-title">Latest source-recorded reset</span><span class="pill" id="health">Connecting…</span></div>
+      <p class="main-value" id="last-time">Loading status…</p>
+      <p class="detail" id="last-detail">Reading public records, not your personal account.</p>
+      <p class="quote" id="last-excerpt" hidden></p>
+      <a class="link" id="source-link" href="#" hidden>View original X post ↗</a>
+    </section>
+
+    <section class="card" aria-labelledby="next-title">
+      <span class="eyebrow" id="next-title">Upcoming announcement</span>
+      <p class="pending-value" id="pending">Checking…</p>
+      <p class="small" id="pending-detail">Announcements are not guarantees of a reset.</p>
+      <a class="link" id="pending-link" href="#" hidden>View original announcement ↗</a>
+    </section>
+
+    <section class="card" aria-labelledby="source-title">
+      <div class="row"><span class="eyebrow" id="source-title">Source health</span><a class="link" id="tibo-link" href="https://tibo.cc/">TIBO ↗</a></div>
+      <div class="meta" style="margin-top:15px">
+        <span class="key">Provider</span><span class="val">TIBO · public REST API</span>
+        <span class="key">Upstream</span><span class="val" id="upstream">Checking…</span>
+        <span class="key">Source fetched</span><span class="val" id="source-fetched">Checking…</span>
+        <span class="key">Radar checked</span><span class="val" id="radar-checked">Checking…</span>
+        <span class="key">Active watch</span><span class="val" id="watch">Unknown</span>
+      </div>
+    </section>
+    <p id="feedback" role="status" aria-live="polite" class="note" hidden></p>
+    <p class="footer">Unofficial community information. A reported reset does not confirm changes to your account's limits. No forecasting or personal quota access.</p>
+  </main>
+  <script type="module" src="./dashboard.ts"></script>
+</body>
+</html>
