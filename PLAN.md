@@ -1,6 +1,6 @@
 # Reset Radar — Project Plan
 
-> **Status:** Step 2 dashboard owner-accepted; Step 2.5 reliability testing in progress · **Last reviewed:** 16 October 2026  
+> **Status:** Step 2.5 reliability testing complete; production smoke test owner-accepted · **Last reviewed:** 17 October 2026  
 > **Repository:** https://github.com/mustafa-ramax/reset-radar  
 > **Target:** Read-only reset data in both ChatGPT conversation panel and left-sidebar app; public plugin later.  
 > **Principle:** Ship an accurate, lightweight read-only radar before adding features.
@@ -31,7 +31,7 @@
 
 **PASSED (owner-confirmed):** [PR #3](https://github.com/mustafa-ramax/reset-radar/pull/3) was merged and deployed. The TIBO dashboard rendered successfully in ChatGPT's left sidebar (`global`), conversation-side panel (`thread`), and inline tool view. The owner tested the Refresh button and the original X source-post links; both worked. This is owner-verified user-visible acceptance, not automated cross-host certification.
 
-**Step 2.5 — reliability gate:** Add deterministic tests for TIBO network failures/timeouts, malformed responses, HTTP 429, staleness, and failure-to-success recovery. Retain both UI entrypoints and existing MCP tool identifiers. Only fix defects exposed by those tests. Verify tests, typecheck, application build, Vercel feature-branch preview, and host smoke checks before merging. Do not add providers, infrastructure, polling, or change the UI.
+**Step 2.5 result — reliability gate PASSED (17 October 2026):** [PR #4](https://github.com/mustafa-ramax/reset-radar/pull/4) was squash-merged to `main` (commit `5752d43`). Ten automated tests cover normal TIBO responses, mocked outages/timeouts, HTTP 503/429, malformed responses, stale data, recovery, and preservation of MCP tool names and `thread`/`global` declarations. Two confirmed adapter issues were fixed: empty objects no longer count as reset announcements, and source snapshots with missing or more-than-one-hour-old `fetched_at` are stale. Vercel's final preview and production deployments reached READY; the production `get_tibo_status` and dashboard-opening tools returned valid responses. **Owner-confirmed production smoke test:** left sidebar (`global`), right conversation panel (`thread`), inline rendering, Refresh, and original X post link all working. Scope stayed TIBO-only, with no UI redesign or new infrastructure. These are deterministic failure-injection tests and owner-observed host behaviours, not independent verification of a real upstream outage or certification across all hosts.
 
 **Deferred UI feedback (not Step 2.5):** Slightly more top spacing and a substantially quieter, more minimal dashboard. Discuss visual changes separately; don't implement them during reliability work.
 
@@ -233,7 +233,7 @@ Reset Radar supports two distinct distributions using **the same open-source cod
 - [x] Install as **personal custom MCP plugin**, without submitting to the public directory.
 - [x] Invoke the Hello World plugin and **owner-verify real `thread` panel, `global` left-sidebar app, and inline widget** on the reported tested interfaces. Live radar remains pending.
 - [x] Owner-validate live dashboard source links and manual Refresh in tested ChatGPT hosts (Step 2 acceptance, 16 October 2026).
-- [ ] Validate failure/response paths in Step 2.5 and any additional host restrictions separately.
+- [x] Validate mocked failure/response paths in Step 2.5 and owner-confirm production dashboard smoke test (17 October 2026). Additional untested hosts remain outside this acceptance.
 
 **Exit gate:** The radar is usable from a real ChatGPT chat and remains read-only. Record the deployed URL only after confirmed deployment.
 
