@@ -5,7 +5,7 @@ export default defineConfig({
   plugins: [viteSingleFile()],
   build: {
     rollupOptions: { input: "widget/dashboard.html" },
-    outDir: "dist/widget",
+    outDir: "dist",
     emptyOutDir: true,
   },
 });
