@@ -43,7 +43,7 @@ The read-only data tool is `get_tibo_status` and can be called independently of 
 
 ## Design review
 
-The dashboard follows host theme colours and typography, with system light/dark fallbacks. Reusable radar SVG/PNG assets and labelled fixture screenshots are described in [the design review](docs/ui-review/README.md). ChatGPT host acceptance is a separate check from a successful build or fixture preview.
+The dashboard follows host theme colours and typography, with system light/dark fallbacks. Reusable radar assets are available as [SVG](public/reset-radar.svg) and PNG at [64px](public/reset-radar-64.png), [192px](public/reset-radar-192.png) and [512px](public/reset-radar-512.png). Existing tests, typecheck, production build and self-contained widget validation passed. Browser fixture checks covered light/dark themes, narrow layouts and loading, stale, unavailable and Refresh states. Actual ChatGPT host acceptance remains a separate check.
 
 ## Scope and limitations
 

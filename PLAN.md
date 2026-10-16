@@ -39,9 +39,9 @@
 
 One design PR covers a quieter dashboard, additional top spacing, host theme colours and typography, a small geometric radar icon with reusable SVG/PNG assets, and Reset Radar user-facing naming. Includes the owner's `.vscode/settings.json` unchanged. Existing MCP identifiers, resource URI, `thread`/`global` entrypoints, provider logic, Refresh and reliability semantics are preserved.
 
-Local checks passed: all 10 existing tests, typecheck, production build and self-contained widget validation. A labelled browser fixture review covered light/dark themes, 280/360/640px widths, loading, available, pending, empty, stale, unavailable, Refresh-in-flight/recovery, keyboard focus and the source-link bridge. See [review evidence](docs/ui-review/README.md). No new tests, packages or infrastructure were added.
+Local checks passed: all 10 existing tests, typecheck, production build and self-contained widget validation. A browser fixture review covered light/dark themes, 280/360/640px widths, loading, available, pending, empty, stale, unavailable, Refresh-in-flight/recovery, keyboard focus and the source-link bridge. Temporary fixture images and the review README were removed after review. No new tests, packages or infrastructure were added.
 
-Vercel preview validation and actual ChatGPT sidebar/right-panel/inline acceptance are separate gates. Do not merge until the owner reviews the screenshots and host experience. Website/widget SVG integration does not imply support for MCP app icon metadata. Public directory publication remains out of scope.
+Vercel preview validation and actual ChatGPT sidebar/right-panel/inline acceptance are separate gates. Do not merge until the owner reviews the design and actual host experience. Real ChatGPT screenshots can be added after host testing. Website/widget SVG integration does not imply support for MCP app icon metadata. Public directory publication remains out of scope.
 
 ## 1. Product goal
 
