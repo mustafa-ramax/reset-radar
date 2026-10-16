@@ -145,10 +145,13 @@ export async function getTiboStatus(): Promise<TiboStatus> {
     if (!contentType.includes("application/json")) return unavailable(checkedAt, "TIBO returned non-JSON data; status is unknown.");
     const raw = JSON.parse(await readBounded(response)) as unknown;
     const parsed = envelopeSchema.safeParse(raw);
-    if (!parsed.success || !parsed.data.data) {
-      return unavailable(checkedAt, "TIBO returned incomplete or invalid status data; status is unknown.");
+    if (!parsed.success) {
+      return unavailable(checkedAt, "TIBO returned invalid status data; status is unknown.");
     }
     const payload = parsed.data;
+    if (!payload.data) {
+      return unavailable(checkedAt, "TIBO returned incomplete status data; status is unknown.");
+    }
     const isStale = payload.stale || payload.upstream_status !== "ok";
     return {
       provider: "TIBO",
