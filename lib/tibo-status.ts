@@ -1,6 +1,8 @@
 // Step 1: one public read-only API. No background jobs, accounts or extra providers.
 const URL_TIBO = "https://tibo.cc/api/v1/status";
 const NOTE = "TIBO republishes third-party community observations, not official confirmation or your personal account's limits.";
+// Conservative freshness check in addition to TIBO's own stale/upstream flags.
+const MAX_PROVIDER_AGE_MS = 60 * 60 * 1000;
 
 function obj(v: unknown): Record<string, unknown> | null {
   return typeof v === "object" && v !== null && !Array.isArray(v)
@@ -13,7 +15,7 @@ function str(v: unknown): string | null {
 
 function time(v: unknown): string | null {
   const s = str(v);
-  return s && /(?:Z|[+-]\d{2}:\d{2})$/i.test(s) && Number.isFinite(Date.parse(s)) ? s : null;
+  return s && /(?:Z|[+-]\\d{2}:\\d{2})$/i.test(s) && Number.isFinite(Date.parse(s)) ? s : null;
 }
 
 function record(v: unknown) {
@@ -21,15 +23,17 @@ function record(v: unknown) {
   if (!r) return null;
   const s = obj(r.source);
   const url = s?.url ?? r.source_url;
-  const sourceUrl = typeof url === "string" && /^https:\/\//i.test(url) && url.length <= 2048
+  const sourceUrl = typeof url === "string" && /^https:\\/\\//i.test(url) && url.length <= 2048
     ? url : null;
-  return {
+  const item = {
     id: str(r.id),
     resetType: str(r.reset_type),
     announcedAt: time(r.announced_at) ?? time(r.observed_at),
     textExcerpt: typeof r.text === "string" ? r.text.slice(0, 200) : null,
     originalPostUrl: sourceUrl,
   };
+  // An empty object isn't an announcement or a recorded reset.
+  return Object.values(item).some((value) => value !== null && value !== "") ? item : null;
 }
 
 export async function getTiboStatus() {
@@ -62,14 +66,16 @@ export async function getTiboStatus() {
     if (!envelope || !data || typeof envelope.stale !== "boolean")
       return unavailable("TIBO returned invalid or empty data; status unknown.");
 
-    const stale = envelope.stale || envelope.upstream_status !== "ok";
+    const fetchedAt = time(envelope.fetched_at);
+    const stale = envelope.stale || envelope.upstream_status !== "ok"
+      || !fetchedAt || Date.now() - Date.parse(fetchedAt) > MAX_PROVIDER_AGE_MS;
     return {
       provider: "TIBO", providerUrl: "https://tibo.cc/", checkedAt,
       state: stale ? "stale" : "available",
       latestRecordedReset: record(data.latest_reset),
       pendingAnnouncement: record(data.scheduled_reset),
       activeWatchPresent: obj(data.active_watch) !== null,
-      providerFetchedAt: time(envelope.fetched_at),
+      providerFetchedAt: fetchedAt,
       upstreamStatus: str(envelope.upstream_status),
       warning: stale ? "Provider data may be outdated; no current announcement is guaranteed." : null,
       disclaimer: NOTE,
