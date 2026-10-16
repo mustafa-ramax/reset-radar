@@ -43,13 +43,27 @@ const safeLink = (v: unknown): string | null => {
     return null;
   }
 };
-const prettyTime = (value: unknown): string => {
+// Validate optional display fields at the bridge boundary, including partial host results.
+const displayItem = (value: unknown): Item | null => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  const record = value as Record<string, unknown>;
+  const text = (field: string, limit: number) => typeof record[field] === "string"
+    ? (record[field] as string).trim().slice(0, limit) || null : null;
+  const item = {
+    id: text("id", 256), resetType: text("resetType", 256),
+    announcedAt: text("announcedAt", 256), textExcerpt: text("textExcerpt", 200),
+    originalPostUrl: typeof record.originalPostUrl === "string" && record.originalPostUrl.length <= 2048
+      ? record.originalPostUrl : null,
+  };
+  return Object.values(item).some(value => value !== null) ? item : null;
+};
+const prettyTime = (value: unknown, full = false): string => {
   if (typeof value !== "string") return "Unknown";
   const time = Date.parse(value);
   if (!Number.isFinite(time)) return "Unknown";
   try {
     return new Intl.DateTimeFormat(undefined, {
-      dateStyle: "medium", timeStyle: "short",
+      dateStyle: full ? "full" : "medium", timeStyle: full ? "long" : "short",
     }).format(new Date(time));
   } catch {
     return new Date(time).toISOString();
@@ -74,47 +88,59 @@ function usable(value: unknown): value is Snapshot {
     && (record.state === "available" || record.state === "stale" || record.state === "unavailable");
 }
 function render(s: Snapshot) {
-  const badge = byId("health");
-  badge.className = "pill " + s.state;
-  badge.textContent = s.state === "available" ? "Source available" : s.state === "stale" ? "Stale data" : "Source unavailable";
+  set("health", s.state === "available" ? "Source available" : s.state === "stale" ? "Source stale" : "Source unavailable");
+  const post = s.state === "unavailable" ? null : displayItem(s.latestRecordedReset);
+  const pending = displayItem(s.pendingAnnouncement);
+  byId("upcoming").dataset.state = s.state !== "available" ? "uncertain" : pending ? "announced" : "quiet";
+  const lastState = byId("last-state");
+  lastState.textContent = s.state === "unavailable" ? "Unavailable"
+    : !post ? "No source record returned"
+    : post.resetType?.toLowerCase() === "completion" ? "Completion post reported"
+    : post.resetType?.toLowerCase() === "recorded" ? "Recorded post" : "Reset-related post reported";
+  byId("last-context").hidden = s.state !== "stale" || !post;
+  const lastTime = byId("last-time");
+  lastTime.hidden = !post;
+  const postTime = prettyTime(post?.announcedAt);
+  lastTime.textContent = !post ? "" : postTime === "Unknown" ? "Post date unknown" : "Post date " + postTime;
+  showLink(link, post?.originalPostUrl);
 
-  const post = s.latestRecordedReset;
-  if (s.state === "unavailable") {
-    set("last-time", "Status unavailable");
-    set("last-detail", "No current source record can be verified.");
-  } else if (post?.announcedAt) {
-    set("last-time", prettyTime(post.announcedAt));
-    set("last-detail", (post.resetType ? post.resetType[0].toUpperCase() + post.resetType.slice(1) + " · " : "") + "Completion/recorded post published (not independently verified reset time)");
-  } else {
-    set("last-time", "No record returned");
-    set("last-detail", "Latest recorded event is unknown from this provider response.");
-  }
+  const detail = byId("last-detail");
+  detail.hidden = !post;
+  detail.textContent = post ? "Latest post timestamp: " + prettyTime(post.announcedAt, true)
+    + (post.resetType ? " · Source classification: " + post.resetType : "") : "";
   const excerpt = byId("last-excerpt");
-  excerpt.hidden = s.state === "unavailable" || !post?.textExcerpt;
-  excerpt.textContent = excerpt.hidden ? "" : "“" + post?.textExcerpt + "”";
-  showLink(link, s.state === "unavailable" ? null : post?.originalPostUrl);
+  excerpt.hidden = !post?.textExcerpt;
+  excerpt.textContent = post?.textExcerpt ? "“" + post.textExcerpt + "”" : "";
 
   if (s.state !== "available") {
-    set("pending", "Unknown");
-    set("pending-detail", "Source health is uncertain. Cannot confirm whether an upcoming announcement exists.");
+    set("pending", "Unable to verify");
+    byId("pending-detail").hidden = true;
+    set("pending-detail", "");
     showLink(pendingLink, null);
-  } else if (s.pendingAnnouncement) {
-    set("pending", "Announcement recorded");
-    set("pending-detail", s.pendingAnnouncement.announcedAt
-      ? "Published " + prettyTime(s.pendingAnnouncement.announcedAt) + " · not a reset guarantee."
-      : "Source-reported announcement · execution time not verified.");
-    showLink(pendingLink, s.pendingAnnouncement.originalPostUrl);
+  } else if (pending) {
+    byId("pending-detail").hidden = false;
+    set("pending", "Announcement reported");
+    const timestamp = prettyTime(pending.announcedAt);
+    set("pending-detail", timestamp === "Unknown" ? "Post date unknown" : "Post date " + timestamp);
+    showLink(pendingLink, pending.originalPostUrl);
   } else {
-    set("pending", "No upcoming announcement returned");
-    set("pending-detail", "The available feed returned none. This does not prove complete coverage or a future reset date.");
+    byId("pending-detail").hidden = false;
+    set("pending", "No announcement reported");
+    set("pending-detail", "In the current TIBO feed");
     showLink(pendingLink, null);
   }
 
-  set("upstream", s.upstreamStatus ?? "Unknown");
-  set("source-fetched", prettyTime(s.providerFetchedAt));
-  set("radar-checked", prettyTime(s.checkedAt));
-  set("watch", s.state === "unavailable" ? "Unknown" : s.activeWatchPresent ? "Present in feed" : "None returned");
-  notice(s.warning ?? (s.state === "unavailable" ? "TIBO status unavailable. Please try again later." : null), s.state !== "available");
+  set("upstream", typeof s.upstreamStatus === "string" ? s.upstreamStatus : "Unknown");
+  set("source-fetched", prettyTime(s.providerFetchedAt, true));
+  set("radar-checked", prettyTime(s.checkedAt, true));
+  const updated = s.state === "unavailable" ? "Unknown" : prettyTime(s.providerFetchedAt);
+  set("source-updated", updated === "Unknown" ? "Source update time unknown." : "Updated " + updated);
+  const warning = typeof s.warning === "string" && s.warning.trim() ? s.warning : null;
+  const sourceWarning = byId("source-warning");
+  sourceWarning.hidden = !warning;
+  sourceWarning.textContent = warning ?? "";
+  notice(s.state === "stale" ? "TIBO data is stale. Try Refresh."
+    : s.state === "unavailable" ? "Source unavailable. Try Refresh." : warning, s.state !== "available");
 }
 function renderHostError() {
   render({ provider: "TIBO", state: "unavailable", warning: "Could not reach the Reset Radar MCP tool. Check the plugin connection and try Refresh." });
@@ -147,7 +173,7 @@ async function refresh() {
 app.ontoolresult = result => {
   // Initial MCP tool data may arrive when the host opens the sidebar/panel.
   // A manual refresh always uses the same separately tested read-only data tool.
-  renderToolResult(result);
+  if (!renderToolResult(result)) renderHostError();
 };
 refreshButton.addEventListener("click", () => { void refresh(); });
 

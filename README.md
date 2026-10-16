@@ -2,13 +2,13 @@
 
 A lightweight, open-source **ChatGPT MCP app** for viewing community-reported ChatGPT/Codex reset announcements. One public data provider for the current private MVP: [TIBO](https://tibo.cc/).
 
-**Status:** Step 2.5 reliability testing is complete, with the production smoke test owner-accepted on 17/10/2026. The redesigned UI is awaiting acceptance in ChatGPT `thread`, `global` and inline views. This is not a public-plugin or cross-host certification.
+**Status:** Step 2.5 reliability testing is complete, with the production smoke test owner-accepted on 17/10/2026. Step 4A styling is merged. The Step 4B minimalist dashboard is awaiting separate acceptance in ChatGPT `thread`, `global` and inline views. This is not a public-plugin or cross-host certification.
 
 ## Current features
 
 - Same MCP App in the ChatGPT left sidebar (`global`), right conversation tab (`thread`) and inline tool output.
 - Latest TIBO source-recorded completion/reset post with its original evidence link.
-- Upcoming announcement state, source freshness/health, and explicit stale/unavailable messaging.
+- Upcoming reports first, followed by the latest reset-related post and source update time. Stale/unavailable warnings stay visible; diagnostics, excerpts and the full disclaimer are in collapsed **Source details**.
 - Manual **Refresh** using the official MCP Apps host bridge and read-only `get_tibo_status` tool.
 - No personal ChatGPT account access, database, analytics, background polling or forecasts.
 
@@ -43,7 +43,7 @@ The read-only data tool is `get_tibo_status` and can be called independently of 
 
 ## Design review
 
-The dashboard follows host theme colours and typography, with system light/dark fallbacks. Reusable radar assets are available as [SVG](public/reset-radar.svg) and PNG at [64px](public/reset-radar-64.png), [192px](public/reset-radar-192.png) and [512px](public/reset-radar-512.png). Existing tests, typecheck, production build and self-contained widget validation passed. Browser fixture checks covered light/dark themes, narrow layouts and loading, stale, unavailable and Refresh states. Actual ChatGPT host acceptance remains a separate check.
+The dashboard follows host theme colours and typography, with system light/dark fallbacks. Post timestamps represent publication or observation, not verified reset execution; the footer uses the provider's fetch time, not the server-check time. Reusable radar assets are available as [SVG](public/reset-radar.svg) and PNG at [64px](public/reset-radar-64.png), [192px](public/reset-radar-192.png) and [512px](public/reset-radar-512.png). Existing tests, typecheck, production build and self-contained widget validation passed. Temporary browser fixtures covered light/dark themes, 280/360/640px layouts, 200% text scaling, keyboard disclosure, loading, partial/empty data, stale/unavailable states and Refresh recovery. No fixture screenshots are committed. Actual ChatGPT host acceptance remains a separate check.
 
 ## Scope and limitations
 

@@ -11,40 +11,47 @@
   <main class="wrap">
     <header class="head">
       <div class="brand">
-        <!-- Geometry matches public/reset-radar.svg; currentColor follows the host theme. -->
         <span class="mark" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><g stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="9.25" opacity=".5"/><circle cx="12" cy="12" r="5.25" opacity=".7"/><path d="M12 12 18.54 5.46M14.4 3.1a9.25 9.25 0 0 1 6.5 6.5"/></g><circle cx="9.8" cy="14.2" r="1.2" fill="currentColor"/></svg></span>
-        <div><h1>Reset Radar</h1><p class="sub">Community reset reports</p></div>
+        <h1>Reset Radar</h1>
       </div>
       <button class="refresh" id="refresh" type="button">↻ Refresh</button>
     </header>
 
-    <section class="card big" aria-labelledby="last-title">
-      <div class="row"><h2 class="eyebrow" id="last-title">Latest source-recorded reset</h2><span class="pill" id="health" role="status">Connecting…</span></div>
-      <p class="main-value" id="last-time">Loading status…</p>
-      <p class="detail" id="last-detail">Reading public records, not your personal account.</p>
-      <p class="quote" id="last-excerpt" hidden></p>
-      <a class="link" id="source-link" href="#" hidden>View original X post ↗</a>
-    </section>
-
-    <section class="card" aria-labelledby="next-title">
-      <h2 class="eyebrow" id="next-title">Upcoming announcement</h2>
-      <p class="pending-value" id="pending">Checking…</p>
-      <p class="small" id="pending-detail">Announcements are not guarantees of a reset.</p>
+    <section class="report upcoming" id="upcoming" aria-labelledby="next-title">
+      <h2 id="next-title">Upcoming</h2>
+      <p class="report-value" id="pending">Checking reports…</p>
+      <p class="detail" id="pending-detail">Reading the current TIBO feed.</p>
       <a class="link" id="pending-link" href="#" hidden>View original announcement ↗</a>
+      <p id="feedback" role="status" aria-live="polite" class="note" hidden></p>
     </section>
 
-    <section class="card" aria-labelledby="source-title">
-      <div class="row"><h2 class="eyebrow" id="source-title">Source health</h2><a class="link" id="tibo-link" href="https://tibo.cc/">TIBO ↗</a></div>
-      <dl class="meta">
-        <dt>Provider</dt><dd>TIBO · public feed</dd>
-        <dt>Upstream</dt><dd id="upstream">Checking…</dd>
-        <dt>Source fetched</dt><dd class="timestamp" id="source-fetched">Checking…</dd>
-        <dt>Radar checked</dt><dd class="timestamp" id="radar-checked">Checking…</dd>
-        <dt>Active watch</dt><dd id="watch">Unknown</dd>
-      </dl>
+    <section class="report latest" aria-labelledby="last-title">
+      <h2 id="last-title">Latest reported post</h2>
+      <p class="report-value" id="last-state">Loading report…</p>
+      <p class="post-time" id="last-time" hidden></p>
+      <p class="detail" id="last-context" hidden>Historical evidence · stale source</p>
+      <a class="link" id="source-link" href="#" hidden>View original post ↗</a>
     </section>
-    <p id="feedback" role="status" aria-live="polite" class="note" hidden></p>
-    <p class="footer">Unofficial community information. A reported reset does not confirm changes to your account's limits. No forecasting or personal quota access.</p>
+
+    <footer>
+      <p class="freshness">Source: TIBO · <span id="source-updated">Checking update time…</span></p>
+      <details id="source-details">
+        <summary>Source details</summary>
+        <div class="details-body">
+          <dl class="meta">
+            <dt>Provider</dt><dd><a class="link" id="tibo-link" href="https://tibo.cc/">TIBO ↗</a></dd>
+            <dt>Source health</dt><dd id="health">Connecting…</dd>
+            <dt>Upstream</dt><dd id="upstream">Checking…</dd>
+            <dt>Source fetched</dt><dd class="timestamp" id="source-fetched">Checking…</dd>
+            <dt>Radar checked</dt><dd class="timestamp" id="radar-checked">Checking…</dd>
+          </dl>
+          <p class="detail" id="source-warning" hidden></p>
+          <p class="detail" id="last-detail" hidden></p>
+          <p class="quote" id="last-excerpt" hidden></p>
+          <p class="disclaimer">TIBO republishes third-party community observations. Post timestamps may represent publication or observation, not verified reset execution. An empty feed does not prove complete coverage. Announcements are not guarantees, and a reported reset does not confirm changes to your account's limits. Reset Radar is unofficial and unaffiliated with OpenAI. No forecasting or personal quota access.</p>
+        </div>
+      </details>
+    </footer>
   </main>
   <script type="module" src="./dashboard.ts"></script>
 </body>
