@@ -91,10 +91,13 @@ function render(s: Snapshot) {
   set("health", s.state === "available" ? "Source available" : s.state === "stale" ? "Source stale" : "Source unavailable");
   const post = s.state === "unavailable" ? null : displayItem(s.latestRecordedReset);
   const pending = displayItem(s.pendingAnnouncement);
+  byId("upcoming").dataset.state = s.state !== "available" ? "uncertain" : pending ? "announced" : "quiet";
   const lastState = byId("last-state");
-  lastState.hidden = s.state === "available" && post !== null;
   lastState.textContent = s.state === "unavailable" ? "Unavailable"
-    : post ? "Historical post · stale source" : "No source record returned";
+    : !post ? "No source record returned"
+    : post.resetType?.toLowerCase() === "completion" ? "Completion post reported"
+    : post.resetType?.toLowerCase() === "recorded" ? "Recorded post" : "Reset-related post reported";
+  byId("last-context").hidden = s.state !== "stale" || !post;
   const lastTime = byId("last-time");
   lastTime.hidden = !post;
   const postTime = prettyTime(post?.announcedAt);
@@ -110,16 +113,19 @@ function render(s: Snapshot) {
   excerpt.textContent = post?.textExcerpt ? "“" + post.textExcerpt + "”" : "";
 
   if (s.state !== "available") {
-    set("pending", "Upcoming status unknown");
-    set("pending-detail", "The current TIBO feed cannot be confirmed.");
+    set("pending", "Unable to verify");
+    byId("pending-detail").hidden = true;
+    set("pending-detail", "");
     showLink(pendingLink, null);
   } else if (pending) {
+    byId("pending-detail").hidden = false;
     set("pending", "Announcement reported");
     const timestamp = prettyTime(pending.announcedAt);
     set("pending-detail", timestamp === "Unknown" ? "Post timestamp unknown" : "Post timestamp " + timestamp);
     showLink(pendingLink, pending.originalPostUrl);
   } else {
-    set("pending", "No upcoming announcement reported");
+    byId("pending-detail").hidden = false;
+    set("pending", "No announcement reported");
     set("pending-detail", "In the current TIBO feed");
     showLink(pendingLink, null);
   }
@@ -130,8 +136,11 @@ function render(s: Snapshot) {
   const updated = s.state === "unavailable" ? "Unknown" : prettyTime(s.providerFetchedAt);
   set("source-updated", updated === "Unknown" ? "Source update time unknown." : "Updated " + updated);
   const warning = typeof s.warning === "string" && s.warning.trim() ? s.warning : null;
-  notice(warning ?? (s.state === "stale" ? "TIBO data is stale. Historical evidence may be outdated."
-    : s.state === "unavailable" ? "TIBO status unavailable. Please try again later." : null), s.state !== "available");
+  const sourceWarning = byId("source-warning");
+  sourceWarning.hidden = !warning;
+  sourceWarning.textContent = warning ?? "";
+  notice(s.state === "stale" ? "TIBO data is stale. Try Refresh."
+    : s.state === "unavailable" ? "Source unavailable. Try Refresh." : warning, s.state !== "available");
 }
 function renderHostError() {
   render({ provider: "TIBO", state: "unavailable", warning: "Could not reach the Reset Radar MCP tool. Check the plugin connection and try Refresh." });

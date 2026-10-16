@@ -10,25 +10,29 @@
 <body>
   <main class="wrap">
     <header class="head">
-      <h1>Reset Radar</h1>
+      <div class="brand">
+        <span class="mark" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><g stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="9.25" opacity=".5"/><circle cx="12" cy="12" r="5.25" opacity=".7"/><path d="M12 12 18.54 5.46M14.4 3.1a9.25 9.25 0 0 1 6.5 6.5"/></g><circle cx="9.8" cy="14.2" r="1.2" fill="currentColor"/></svg></span>
+        <h1>Reset Radar</h1>
+      </div>
       <button class="refresh" id="refresh" type="button">↻ Refresh</button>
     </header>
 
-    <section class="report" aria-labelledby="next-title">
-      <h2 id="next-title">Upcoming reports</h2>
+    <section class="report upcoming" id="upcoming" aria-labelledby="next-title">
+      <h2 id="next-title">Upcoming</h2>
       <p class="report-value" id="pending">Checking reports…</p>
       <p class="detail" id="pending-detail">Reading the current TIBO feed.</p>
       <a class="link" id="pending-link" href="#" hidden>View original announcement ↗</a>
+      <p id="feedback" role="status" aria-live="polite" class="note" hidden></p>
     </section>
 
-    <section class="report" aria-labelledby="last-title">
-      <h2 id="last-title">Latest reset-related post</h2>
+    <section class="report latest" aria-labelledby="last-title">
+      <h2 id="last-title">Latest reported post</h2>
       <p class="report-value" id="last-state">Loading report…</p>
       <p class="post-time" id="last-time" hidden></p>
+      <p class="detail" id="last-context" hidden>Historical evidence · stale source</p>
       <a class="link" id="source-link" href="#" hidden>View original post ↗</a>
     </section>
 
-    <p id="feedback" role="status" aria-live="polite" class="note" hidden></p>
     <footer>
       <p class="freshness">Source: TIBO · <span id="source-updated">Checking update time…</span></p>
       <details id="source-details">
@@ -41,6 +45,7 @@
             <dt>Source fetched</dt><dd class="timestamp" id="source-fetched">Checking…</dd>
             <dt>Radar checked</dt><dd class="timestamp" id="radar-checked">Checking…</dd>
           </dl>
+          <p class="detail" id="source-warning" hidden></p>
           <p class="detail" id="last-detail" hidden></p>
           <p class="quote" id="last-excerpt" hidden></p>
           <p class="disclaimer">TIBO republishes third-party community observations. Post timestamps may represent publication or observation, not verified reset execution. An empty feed does not prove complete coverage. Announcements are not guarantees, and a reported reset does not confirm changes to your account's limits. Reset Radar is unofficial and unaffiliated with OpenAI. No forecasting or personal quota access.</p>
