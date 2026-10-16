@@ -1,9 +1,21 @@
 # Reset Radar — Project Plan
 
-> **Status:** Planning only · **Last reviewed:** 15 October 2026  
+> **Status:** Host compatibility proven; Step 1 of live data integration next · **Last reviewed:** 16 October 2026  
 > **Repository:** https://github.com/mustafa-ramax/reset-radar  
-> **Target:** Personal ChatGPT conversation panel first; cross-platform testing second; public plugin later.  
+> **Target:** Read-only reset data in both ChatGPT conversation panel and left-sidebar app; public plugin later.  
 > **Principle:** Ship an accurate, lightweight read-only radar before adding features.
+
+## Early integration milestone — Hello World verified (15–16 October 2026)
+
+**Status: PASSED for the owner's tested ChatGPT hosts.** We deliberately built a disposable minimal MCP Apps Hello World first, rather than developing the radar and hoping ChatGPT could place it correctly.
+
+- **Repository and deployment:** public GitHub `mustafa-ramax/reset-radar` is linked to Vercel; the deployment at `https://reset-radar-eight.vercel.app/api/mcp` passed a production build and an actual read-only `show_reset_radar_hello` MCP call.
+- **Working entrypoints:** `thread` rendered in a real conversation-side panel; `global` displayed in the left sidebar as a dedicated app; model-invoked calls rendered inline. The owner also reported these working in their tested ChatGPT desktop/web, Work and Codex interfaces. This records **owner-confirmed user-visible behaviour**, not an independent automated cross-platform certification.
+- **Important discovery:** invoking the MCP tool from chat renders *inline*; opening the content tab via More tools accesses the `thread` panel. The `global` entry is accessed through the left sidebar. A screenshot-backed owner test established both surfaces.
+- **Build regression and recovery:** adding an optional SVG icon coincided with a Vercel TypeScript/lint build failure. We removed it on a feature branch, confirmed the preview build, and merged [PR #1](https://github.com/mustafa-ramax/reset-radar/pull/1) after Vercel reported READY for preview and production.
+- **Scope of this success:** only a static Hello World resource and read-only MCP tool. No live TIBO data, correctness checks, refresh behaviour, historical feeds, public distribution, quota monitoring or future reset guarantees have yet been demonstrated.
+
+**Next controlled change (Step 1 only):** server-side fetch of the validated public `https://tibo.cc/api/v1/status` endpoint, with a bounded response, explicit freshness/error semantics and an independent read-only MCP tool. Preserve the existing Hello World UI unchanged for regression testing. No Codex Reset feed, ledger, visual redesign, polling or database in this step.
 
 ## 1. Product goal
 
@@ -23,7 +35,7 @@ A private MCP plugin displays a usable panel in a real ChatGPT conversation, loa
 
 ## Phase 0 research and validation (15 October 2026)
 
-**Outcome: COMPLETE for research and architecture selection, based on the owner's live Codex tests.** The [Phase 0 validation report](docs/phase-0-validation.md#g-phase-0-verified-live-tests-from-user-run-codex-15-october-2026-aedt) records successful official-SDK connections to two existing remote MCP services and HTTP tests of the intended JSON providers. The legacy whenresets.com signal path failed and is excluded from the default MVP. The upstream services do not advertise the custom UI panel, so we will build a **thin MCP/UI bridge** using existing REST data. **This does not claim our new endpoint, ChatGPT panel, cross-platform support or deployments are tested**: those are later phase gates.
+**Outcome: COMPLETE for research and architecture selection, based on the owner's live Codex tests.** The [Phase 0 validation report](docs/phase-0-validation.md#g-phase-0-verified-live-tests-from-user-run-codex-15-october-2026-aedt) records successful official-SDK connections to two existing remote MCP services and HTTP tests of the intended JSON providers. The legacy whenresets.com signal path failed and is excluded from the default MVP. The upstream services do not advertise the custom UI panel, so we will build a **thin MCP/UI bridge** using existing REST data. **At that research date**, our new endpoint and host rendering were not tested; those integration gates were subsequently exercised in the 15–16 October Hello World smoke test documented below.
 
 ### Verification boundary
 
@@ -161,7 +173,7 @@ Reset Radar supports two distinct distributions using **the same open-source cod
 - [x] Choose an initial provider priority and document safe unknown, stale, announcement and timestamp semantics.
 - [x] Decide to use a minimal MCP/UI bridge with upstream REST, rather than build a data collection backend.
 
-**Exit gate: PASSED for research/feasibility.** Based on user-run 15 October tests; see [validated findings](docs/phase-0-validation.md#g-phase-0-verified-live-tests-from-user-run-codex-15-october-2026-aedt). **Our own HTTPS MCP endpoint** will be tested during Phase 2/4 and the **real ChatGPT conversation panel** during Phase 4. Neither is claimed complete here.
+**Exit gate: PASSED for research/feasibility.** Based on user-run 15 October tests; see [validated findings](docs/phase-0-validation.md#g-phase-0-verified-live-tests-from-user-run-codex-15-october-2026-aedt). **Our own HTTPS MCP endpoint** and real `thread`/`global` UI rendering were subsequently tested in the early integration smoke test below. The **live data adapter** and its error handling remain unverified.
 
 ### Phase 1 — Repository bootstrap
 
@@ -197,11 +209,11 @@ Reset Radar supports two distinct distributions using **the same open-source cod
 
 ### Phase 4 — Personal Vercel deployment & ChatGPT integration
 
-- [ ] Resolve Vercel GitHub installation/repository access for `reset-radar`.
-- [ ] Import/link the public repo to the user's personal Vercel Hobby account (non-commercial personal MVP), with an environment-configured MCP origin.
-- [ ] Deploy, verify HTTPS and MCP endpoint health.
-- [ ] Install as **personal custom MCP plugin**, without submitting to the public directory.
-- [ ] Open a new ChatGPT conversation, invoke the radar and **verify the real `thread` panel** in the user's account; explicitly record unsupported host outcomes.
+- [x] Resolve Vercel GitHub installation/repository access for `reset-radar` (smoke-test project linked and deployed).
+- [x] Link the public repo to the user's Vercel project for the **temporary Hello World smoke test**; production-grade origin configuration still pending.
+- [x] Deploy and verify HTTPS + read-only Hello World MCP tool call (**smoke test only**, not live radar).
+- [x] Install as **personal custom MCP plugin**, without submitting to the public directory.
+- [x] Invoke the Hello World plugin and **owner-verify real `thread` panel, `global` left-sidebar app, and inline widget** on the reported tested interfaces. Live radar remains pending.
 - [ ] Validate source links, live refresh, host restrictions and response/error paths.
 
 **Exit gate:** The radar is usable from a real ChatGPT chat and remains read-only. Record the deployed URL only after confirmed deployment.
@@ -274,7 +286,7 @@ Reset Radar supports two distinct distributions using **the same open-source cod
 
 ## 10. First implementation task
 
-**Start with Phase 1 — repository bootstrap.** Phase 0's live provider and existing-MCP feasibility research has passed; preserve the recorded evidence and limitations. Scaffold the smallest reusable TypeScript MCP/UI foundation and tests, without deploying yet. Defer live panel installation/render verification to Phase 4; do **not** begin with public plugin submission, notification infrastructure or a design overhaul.
+**Start with Step 1 of the live radar: one read-only `tibo.cc/api/v1/status` adapter and one independently callable MCP status tool.** Keep the tested Hello World UI unchanged (both `thread` and `global`), preserve existing tool names, and defer all real dashboard work and other providers. Validate build, one live status result, safe error handling, and preview deployment before merging. Phase 1 hygiene items (MIT licence, tests/lint and full setup docs) remain outstanding; do not mark them complete solely because the smoke-test scaffold exists.
 
 ## Reference documentation
 
