@@ -2,7 +2,7 @@
 
 A lightweight, open-source **ChatGPT MCP app** for viewing community-reported ChatGPT/Codex reset announcements. One public data provider for the current private MVP: [TIBO](https://tibo.cc/).
 
-**Status:** Step 2 compact dashboard implemented; user-visible dashboard rendering is still an acceptance test. The earlier Hello World proved ChatGPT `thread`, `global` and inline entrypoints in the owner's tested hosts.
+**Status:** Step 2 dashboard owner-accepted on 16 October 2026 after testing ChatGPT `thread`, `global`, inline rendering, Refresh and X source links. Step 2.5 automated reliability checks are the next gate. This is not a public-plugin or cross-host certification.
 
 ## Current features
 
@@ -28,6 +28,7 @@ The MCP endpoint is `http://localhost:3000/api/mcp`. The Vite build produces one
 ```bash
 npm run build
 npm run typecheck
+npm test
 ```
 
 `npm run verify:widget` validates the embedded bundle after `npm run build:widget`. Run [MCP Inspector](https://github.com/modelcontextprotocol/inspector) to test Streamable HTTP MCP tools.
