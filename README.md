@@ -2,7 +2,7 @@
 
 A lightweight, open-source **ChatGPT MCP app** for viewing community-reported ChatGPT/Codex reset announcements. One public data provider for the current private MVP: [TIBO](https://tibo.cc/).
 
-**Status:** Step 2 dashboard owner-accepted on 16 October 2026 after testing ChatGPT `thread`, `global`, inline rendering, Refresh and X source links. Step 2.5 automated reliability checks are the next gate. This is not a public-plugin or cross-host certification.
+**Status:** Step 2.5 reliability testing is complete, with the production smoke test owner-accepted on 17/10/2026. The redesigned UI is awaiting acceptance in ChatGPT `thread`, `global` and inline views. This is not a public-plugin or cross-host certification.
 
 ## Current features
 
@@ -37,9 +37,13 @@ npm test
 
 Deploy this project to your **own** HTTPS Next.js host, then register `https://YOUR-HOST.example/api/mcp` as a custom MCP plugin. Avoid sharing the maintainer's endpoint when self-hosting.
 
-Open the plugin from the left sidebar or a conversation's content tab. You can also invoke **Open Reset Radar** in a chat. Because the technical tool name `show_reset_radar_hello` was preserved for existing installations, refresh the plugin's tool metadata if the old Hello World title remains cached.
+Open the plugin from the left sidebar or a conversation's content tab. You can also invoke **Reset Radar** in a chat. Because the technical tool name `show_reset_radar_hello` was preserved for existing installations, refresh the plugin's tool metadata if the old title remains cached.
 
 The read-only data tool is `get_tibo_status` and can be called independently of the graphical UI.
+
+## Design review
+
+The dashboard follows host theme colours and typography, with system light/dark fallbacks. Reusable radar assets are available as [SVG](public/reset-radar.svg) and PNG at [64px](public/reset-radar-64.png), [192px](public/reset-radar-192.png) and [512px](public/reset-radar-512.png). Existing tests, typecheck, production build and self-contained widget validation passed. Browser fixture checks covered light/dark themes, narrow layouts and loading, stale, unavailable and Refresh states. Actual ChatGPT host acceptance remains a separate check.
 
 ## Scope and limitations
 

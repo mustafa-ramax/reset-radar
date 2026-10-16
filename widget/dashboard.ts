@@ -1,4 +1,4 @@
-import { App } from "@modelcontextprotocol/ext-apps";
+import { App, applyDocumentTheme, applyHostStyleVariables, type McpUiHostContext } from "@modelcontextprotocol/ext-apps";
 
 type Item = {
   id?: string | null;
@@ -19,6 +19,11 @@ type Snapshot = {
   warning?: string | null;
 };
 const app = new App({ name: "Reset Radar", version: "0.1.0" });
+const applyHostTheme = (context: McpUiHostContext | undefined) => {
+  if (context?.theme) applyDocumentTheme(context.theme);
+  if (context?.styles?.variables) applyHostStyleVariables(context.styles.variables);
+};
+app.onhostcontextchanged = context => applyHostTheme(context);
 const byId = (id: string): HTMLElement => {
   const element = document.getElementById(id);
   if (!element) throw new Error("Missing element: " + id);
@@ -158,4 +163,7 @@ for (const element of [link, pendingLink, byId("tibo-link") as HTMLAnchorElement
 }
 
 // No timers, subscriptions, polling, browser-to-TIBO fetches or storage.
-void app.connect().then(() => refresh()).catch(renderHostError);
+void app.connect().then(() => {
+  applyHostTheme(app.getHostContext());
+  return refresh();
+}).catch(renderHostError);
