@@ -1,34 +1,51 @@
 # Reset Radar
 
-Open-source ChatGPT/Codex reset radar. **Current branch is a temporary Hello World compatibility smoke test, not the tracker MVP.**
+A lightweight, open-source **ChatGPT MCP app** for viewing community-reported ChatGPT/Codex reset announcements. One public data provider for the current private MVP: [TIBO](https://tibo.cc/).
 
-## Why this tiny test exists
+**Status:** Step 2 compact dashboard implemented; user-visible dashboard rendering is still an acceptance test. The earlier Hello World proved ChatGPT `thread`, `global` and inline entrypoints in the owner's tested hosts.
 
-Before implementing the dashboard or integrating third-party reset feeds, we need to verify whether a personal ChatGPT plugin can render an MCP Apps **conversation-side panel** (`openai/ui.entrypoints: [{ type: "thread" }]`).
+## Current features
 
-The test registers one read-only tool: `show_reset_radar_hello`, plus one static `ui://reset-radar/hello.html` MCP Apps resource. It reads no external data and contains no telemetry or background refresh.
+- Same MCP App in the ChatGPT left sidebar (`global`), right conversation tab (`thread`) and inline tool output.
+- Latest TIBO source-recorded completion/reset post with its original evidence link.
+- Upcoming announcement state, source freshness/health, and explicit stale/unavailable messaging.
+- Manual **Refresh** using the official MCP Apps host bridge and read-only `get_tibo_status` tool.
+- No personal ChatGPT account access, database, analytics, background polling or forecasts.
 
-## Run locally
+**Important:** A published post or community observation is **not proof your account's limits have reset**. No reported upcoming announcement means none was returned by the source; coverage is not guaranteed.
 
-- Node.js 20+
-- `npm install`
-- `npm run dev`
-- Server: `http://localhost:3000/api/mcp`
-- Validate with the [MCP Inspector](https://github.com/modelcontextprotocol/inspector): `npx @modelcontextprotocol/inspector` (Streamable HTTP).
+## Local development
 
-## Test in ChatGPT
+Requires Node.js 20+.
 
-1. Deploy the test server on a publicly reachable HTTPS address (or tunnel the local port). Append `/api/mcp` to the address. **Don't use the root page as the MCP URL.**
-2. In ChatGPT Plugins, add a custom MCP server with no authentication, install it personally, and open a new chat.
-3. Select the plugin and ask: **Open the Reset Radar Hello World panel.**
-4. Confirm both the read-only tool runs and **a side panel appears beside the chat** showing `Hello from Reset Radar!`.
-5. If only tool text appears, record that as a UI/host integration failure; it is not a successful panel test. Refresh the plugin after metadata changes.
+```bash
+npm install
+npm run dev
+```
 
-## Current limits
+The MCP endpoint is `http://localhost:3000/api/mcp`. The Vite build produces one self-contained HTML widget embedded in the MCP Apps resource. To validate the build:
 
-- No real reset data or forecasts.
-- No account connection, storage, background jobs or notifications.
-- No claim of compatibility with Codex visual panels, macOS clients or all ChatGPT accounts until tested.
-- We do not hardcode a Vercel hostname in the source.
+```bash
+npm run build
+npm run typecheck
+```
 
-See [PLAN.md](PLAN.md) and [Phase 0 findings](docs/phase-0-validation.md). Further implementation begins only after the compatibility gate is resolved.
+`npm run verify:widget` validates the embedded bundle after `npm run build:widget`. Run [MCP Inspector](https://github.com/modelcontextprotocol/inspector) to test Streamable HTTP MCP tools.
+
+## Install in ChatGPT
+
+Deploy this project to your **own** HTTPS Next.js host, then register `https://YOUR-HOST.example/api/mcp` as a custom MCP plugin. Avoid sharing the maintainer's endpoint when self-hosting.
+
+Open the plugin from the left sidebar or a conversation's content tab. You can also invoke **Open Reset Radar** in a chat. Because the technical tool name `show_reset_radar_hello` was preserved for existing installations, refresh the plugin's tool metadata if the old Hello World title remains cached.
+
+The read-only data tool is `get_tibo_status` and can be called independently of the graphical UI.
+
+## Scope and limitations
+
+- Provider: `https://tibo.cc/api/v1/status` only. No other providers are included yet.
+- The server caches public API reads for approximately 5 minutes and enforces an 8-second timeout; pressing Refresh might legitimately return the same source snapshot.
+- UI has no automatic polling, writes, authentication or tracking.
+- Source outage and upstream ambiguity are displayed as unknown or unavailable.
+- No promise of personal usage-limit reset, exact execution time, provider-wide coverage, or compatibility in untested host versions.
+
+See [PLAN.md](PLAN.md) for milestones and [Phase 0 validation](docs/phase-0-validation.md) for source evaluation. This project is still an early personal MVP, not an official OpenAI application or approved directory listing.
