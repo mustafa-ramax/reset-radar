@@ -35,13 +35,23 @@
 
 **Deferred UI feedback (not Step 2.5):** Slightly more top spacing and a substantially quieter, more minimal dashboard. Discuss visual changes separately; don't implement them during reliability work.
 
-## Dashboard design update (17/10/2026; review pending)
+## Step 4A — dashboard styling merged (17/10/2026)
 
-One design PR covers a quieter dashboard, additional top spacing, host theme colours and typography, a small geometric radar icon with reusable SVG/PNG assets, and Reset Radar user-facing naming. Includes the owner's `.vscode/settings.json` unchanged. Existing MCP identifiers, resource URI, `thread`/`global` entrypoints, provider logic, Refresh and reliability semantics are preserved.
+[PR #6](https://github.com/mustafa-ramax/reset-radar/pull/6) delivered a quieter dashboard, additional top spacing, host theme colours and typography, a small geometric radar icon with reusable SVG/PNG assets, and Reset Radar user-facing naming. Includes the owner's `.vscode/settings.json` unchanged. Existing MCP identifiers, resource URI, `thread`/`global` entrypoints, provider logic, Refresh and reliability semantics are preserved.
 
 Local checks passed: all 10 existing tests, typecheck, production build and self-contained widget validation. A browser fixture review covered light/dark themes, 280/360/640px widths, loading, available, pending, empty, stale, unavailable, Refresh-in-flight/recovery, keyboard focus and the source-link bridge. Temporary fixture images and the review README were removed after review. No new tests, packages or infrastructure were added.
 
-Vercel preview validation and actual ChatGPT sidebar/right-panel/inline acceptance are separate gates. Do not merge until the owner reviews the design and actual host experience. Real ChatGPT screenshots can be added after host testing. Website/widget SVG integration does not imply support for MCP app icon metadata. Public directory publication remains out of scope.
+The owner accepted the styling, and PR #6 is merged. [Issue #7](https://github.com/mustafa-ramax/reset-radar/issues/7) defines the separate Step 4B information-hierarchy follow-up. Website/widget SVG integration does not imply support for MCP app icon metadata. Public directory publication remains out of scope.
+
+## Step 4B — minimalist information hierarchy (17/10/2026; acceptance pending)
+
+Implements [Issue #7](https://github.com/mustafa-ramax/reset-radar/issues/7): upcoming reports first, latest reset-related post second, a subtle source-update footer and a native collapsed **Source details** disclosure. Removes the dashboard logo, subtitle, repeated cards, healthy-source badge and default diagnostics. Excerpts, full absolute source/check timestamps, upstream health and one complete attribution/disclaimer are in Details; active-watch information remains in the API only.
+
+Post timestamps are labelled as publication/observation evidence, not reset execution. Footer freshness uses `providerFetchedAt`, never `checkedAt`. Stale/unavailable warnings remain visible without opening Details; stale historical posts are explicitly labelled, and unavailable responses clear report content and links. Optional display fields are validated so partial or malformed host results do not crash rendering. Provider logic, caching, tool names, resource URI, entrypoints, safe-link handling and Refresh calls are unchanged. No dependencies, timers, storage or infrastructure were added. Production icons and owner settings are unchanged.
+
+Local validation passed: all 10 existing tests, typecheck, production build and self-contained CSS/JS verification. Temporary fixtures exercised available/pending/empty/partial/invalid/stale/unavailable/loading states, missing timestamps, unsafe links, Refresh in flight and error recovery. Browser checks covered both themes at 280/360/640px, expanded disclosure with long text, keyboard focus and 200% text scaling with no horizontal overflow or nested scrolling. Disclosure state survived Refresh and theme changes; repeated activation during Refresh made no duplicate call. Screenshots and the fixture harness remain outside the repository.
+
+Vercel preview status and any access limitations are recorded in the PR. Real ChatGPT sidebar, right-panel and inline acceptance remain the owner's separate gate. Do not merge this follow-up until approved.
 
 ## 1. Product goal
 
