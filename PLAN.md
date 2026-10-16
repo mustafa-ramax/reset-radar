@@ -1,6 +1,6 @@
 # Reset Radar — Project Plan
 
-> **Status:** Host entrypoints and first live TIBO status tool verified; Step 2 dashboard in progress · **Last reviewed:** 16 October 2026  
+> **Status:** Step 2 dashboard owner-accepted; Step 2.5 reliability testing in progress · **Last reviewed:** 16 October 2026  
 > **Repository:** https://github.com/mustafa-ramax/reset-radar  
 > **Target:** Read-only reset data in both ChatGPT conversation panel and left-sidebar app; public plugin later.  
 > **Principle:** Ship an accurate, lightweight read-only radar before adding features.
@@ -25,7 +25,15 @@
 
 **Validated:** live remote MCP tool call, normal-case public API response, state/freshness fields, original source URL and working production deployment. **Not yet validated:** actual failure injection, 429 and offline recovery, repeated refresh in a rendered dashboard, complete upstream announcement coverage, cross-provider reconciliation or any personal quota changes.
 
-**Step 2 scope (current):** replace the static Hello World UI with a responsive compact TIBO dashboard, retaining both `thread` and `global` entrypoints and the existing `get_tibo_status` tool. Use MCP Apps host bridge for one initial read and manual refresh, show last-recorded post, pending-announcement unknown/none-returned semantics, stale/unavailable states, provider timestamp and attribution. Do not add another data source, database, push alerts, background polling, user telemetry or personal-quota claims. A successful Vercel build is a gate, and user-visible host rendering is a **separate** acceptance gate.
+**Step 2 scope (delivered):** replace the static Hello World UI with a responsive compact TIBO dashboard, retaining both `thread` and `global` entrypoints and the existing `get_tibo_status` tool. Use MCP Apps host bridge for one initial read and manual refresh, show last-recorded post, pending-announcement unknown/none-returned semantics, stale/unavailable states, provider timestamp and attribution. Do not add another data source, database, push alerts, background polling, user telemetry or personal-quota claims. A successful Vercel build is a gate, and user-visible host rendering is a **separate** acceptance gate.
+
+## Step 2 result — dashboard owner-accepted (16 October 2026)
+
+**PASSED (owner-confirmed):** [PR #3](https://github.com/mustafa-ramax/reset-radar/pull/3) was merged and deployed. The TIBO dashboard rendered successfully in ChatGPT's left sidebar (`global`), conversation-side panel (`thread`), and inline tool view. The owner tested the Refresh button and the original X source-post links; both worked. This is owner-verified user-visible acceptance, not automated cross-host certification.
+
+**Step 2.5 — reliability gate:** Add deterministic tests for TIBO network failures/timeouts, malformed responses, HTTP 429, staleness, and failure-to-success recovery. Retain both UI entrypoints and existing MCP tool identifiers. Only fix defects exposed by those tests. Verify tests, typecheck, application build, Vercel feature-branch preview, and host smoke checks before merging. Do not add providers, infrastructure, polling, or change the UI.
+
+**Deferred UI feedback (not Step 2.5):** Slightly more top spacing and a substantially quieter, more minimal dashboard. Discuss visual changes separately; don't implement them during reliability work.
 
 ## 1. Product goal
 
@@ -224,7 +232,8 @@ Reset Radar supports two distinct distributions using **the same open-source cod
 - [x] Deploy and verify HTTPS + read-only Hello World MCP tool call (**smoke test only**, not live radar).
 - [x] Install as **personal custom MCP plugin**, without submitting to the public directory.
 - [x] Invoke the Hello World plugin and **owner-verify real `thread` panel, `global` left-sidebar app, and inline widget** on the reported tested interfaces. Live radar remains pending.
-- [ ] Validate source links, live refresh, host restrictions and response/error paths.
+- [x] Owner-validate live dashboard source links and manual Refresh in tested ChatGPT hosts (Step 2 acceptance, 16 October 2026).
+- [ ] Validate failure/response paths in Step 2.5 and any additional host restrictions separately.
 
 **Exit gate:** The radar is usable from a real ChatGPT chat and remains read-only. Record the deployed URL only after confirmed deployment.
 
