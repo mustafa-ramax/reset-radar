@@ -63,10 +63,9 @@ const handler = createMcpHandler(
       }),
     );
 
-    // Step 1 only: independently callable server-side data tool.
-    // No UI resource or entrypoint change: the Hello World panel remains as tested.
-    registerAppTool(
-      server,
+    // Step 1 only: data-only tools use the MCP SDK directly (no UI metadata).
+    // The Hello World MCP App and both entrypoints remain unchanged.
+    server.registerTool(
       "get_tibo_status",
       {
         title: "Get Reset Radar TIBO Status",
