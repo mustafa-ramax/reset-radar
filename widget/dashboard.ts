@@ -101,7 +101,7 @@ function render(s: Snapshot) {
   const lastTime = byId("last-time");
   lastTime.hidden = !post;
   const postTime = prettyTime(post?.announcedAt);
-  lastTime.textContent = !post ? "" : postTime === "Unknown" ? "Post timestamp unknown" : "Post timestamp " + postTime;
+  lastTime.textContent = !post ? "" : postTime === "Unknown" ? "Post date unknown" : "Post date " + postTime;
   showLink(link, post?.originalPostUrl);
 
   const detail = byId("last-detail");
@@ -121,7 +121,7 @@ function render(s: Snapshot) {
     byId("pending-detail").hidden = false;
     set("pending", "Announcement reported");
     const timestamp = prettyTime(pending.announcedAt);
-    set("pending-detail", timestamp === "Unknown" ? "Post timestamp unknown" : "Post timestamp " + timestamp);
+    set("pending-detail", timestamp === "Unknown" ? "Post date unknown" : "Post date " + timestamp);
     showLink(pendingLink, pending.originalPostUrl);
   } else {
     byId("pending-detail").hidden = false;
