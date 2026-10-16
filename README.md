@@ -37,9 +37,13 @@ npm test
 
 Deploy this project to your **own** HTTPS Next.js host, then register `https://YOUR-HOST.example/api/mcp` as a custom MCP plugin. Avoid sharing the maintainer's endpoint when self-hosting.
 
-Open the plugin from the left sidebar or a conversation's content tab. You can also invoke **Open Reset Radar** in a chat. Because the technical tool name `show_reset_radar_hello` was preserved for existing installations, refresh the plugin's tool metadata if the old Hello World title remains cached.
+Open the plugin from the left sidebar or a conversation's content tab. You can also invoke **Reset Radar** in a chat. Because the technical tool name `show_reset_radar_hello` was preserved for existing installations, refresh the plugin's tool metadata if the old title remains cached.
 
 The read-only data tool is `get_tibo_status` and can be called independently of the graphical UI.
+
+## Design review
+
+The dashboard follows host theme colours and typography, with system light/dark fallbacks. Reusable radar SVG/PNG assets and labelled fixture screenshots are described in [the design review](docs/ui-review/README.md). ChatGPT host acceptance is a separate check from a successful build or fixture preview.
 
 ## Scope and limitations
 

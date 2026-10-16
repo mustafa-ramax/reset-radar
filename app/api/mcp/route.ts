@@ -15,7 +15,7 @@ const UI_URI = "ui://reset-radar/dashboard.html";
 
 const handler = createMcpHandler(
   (server) => {
-    registerAppResource(server, "Reset Radar Dashboard", UI_URI, {}, async () => {
+    registerAppResource(server, "Reset Radar", UI_URI, {}, async () => {
       const html = await readFile(path.join(process.cwd(), "dist/widget/dashboard.html"), "utf8");
       return { contents: [{ uri: UI_URI, mimeType: RESOURCE_MIME_TYPE, text: html }] };
     });
@@ -24,7 +24,7 @@ const handler = createMcpHandler(
       server,
       "show_reset_radar_hello",
       {
-        title: "Open Reset Radar",
+        title: "Reset Radar",
         description: "Open the read-only Reset Radar dashboard in the ChatGPT conversation panel or left sidebar. Shows third-party TIBO status, latest recorded post, source freshness and manual refresh.",
         inputSchema: z.object({}),
         annotations: { readOnlyHint: true, openWorldHint: false },
@@ -48,7 +48,7 @@ const handler = createMcpHandler(
     server.registerTool(
       "get_tibo_status",
       {
-        title: "Get Reset Radar TIBO Status",
+        title: "Reset Radar status",
         description: "Read the current public TIBO reset status with source freshness and original post links. Third-party observations only, not a personal ChatGPT quota status.",
         inputSchema: z.object({}),
         annotations: { readOnlyHint: true, openWorldHint: true },
