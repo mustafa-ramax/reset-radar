@@ -5,61 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <title>Reset Radar</title>
-  <style>
-    :root { font-family: var(--font-sans, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif); color-scheme: light dark; font-synthesis: none;
-      --radar-bg: var(--color-background-primary, light-dark(#ffffff, #212121));
-      --radar-surface: var(--color-background-secondary, light-dark(#f7f8f8, #292929));
-      --radar-text: var(--color-text-primary, light-dark(#202123, #ececec));
-      --radar-muted: var(--color-text-secondary, light-dark(#666a70, #b8bdc5));
-      --radar-border: var(--color-border-tertiary, light-dark(#e7e9e9, #3d3d3d));
-      --radar-accent: light-dark(#087f78, #68c9bc);
-      --radar-warning: light-dark(#865306, #f0c078);
-      --radar-error: light-dark(#b13b3b, #f3a5a5);
-    }
-    :root[data-theme="light"] { color-scheme: light; }
-    :root[data-theme="dark"] { color-scheme: dark; }
-    * { box-sizing: border-box; }
-    [hidden] {display:none !important;}
-    body {margin:0; padding:32px 24px 24px; background:var(--radar-bg); color:var(--radar-text); font-size:14px; line-height:1.5;}
-    .wrap {width:100%; max-width:640px; margin:0 auto;}
-    .head {display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:28px;}
-    .brand {display:flex; align-items:center; gap:10px; min-width:0;}
-    .mark {display:flex; width:32px; height:32px; color:var(--radar-accent); flex-shrink:0;}
-    .mark svg {width:100%; height:100%;}
-    h1 {font-size:18px; font-weight:650; letter-spacing:-.035em; margin:0; line-height:1.25;}
-    .sub {margin:3px 0 0; color:var(--radar-muted); font-size:12px;}
-    .refresh {border:1px solid var(--radar-border); border-radius:9px; background:var(--radar-bg); color:var(--radar-text); cursor:pointer; font:inherit; font-size:12px; padding:9px 12px; font-weight:550; min-height:40px;}
-    .refresh:hover:not(:disabled) {background:var(--radar-surface);}
-    .refresh:disabled {cursor:wait; opacity:.6;}
-    .refresh:focus-visible, a:focus-visible {outline:2px solid var(--radar-accent); outline-offset:4px;}
-    .card {padding:24px 0; border-bottom:1px solid var(--radar-border); min-width:0;}
-    .card.big {padding:22px; border:1px solid var(--radar-border); border-radius:14px; background:var(--radar-surface);}
-    .row {display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px 12px;}
-    .eyebrow {font-size:12px; font-weight:550; margin:0; color:var(--radar-muted);}
-    .big .row {align-items:flex-start;}
-    .big .eyebrow {flex:1 1 160px;}
-    .pill {display:inline-flex; align-items:center; gap:6px; font-size:11px; font-weight:550; color:var(--radar-muted);}
-    .pill::before {content:""; width:5px; height:5px; flex-shrink:0; border-radius:50%; background:currentColor;}
-    .pill.available {color:var(--radar-accent);}
-    .pill.stale {color:var(--radar-warning);}
-    .pill.unavailable {color:var(--radar-error);}
-    .main-value {margin:18px 0 8px; font-size:clamp(22px,4.5vw,30px); font-weight:600; letter-spacing:-.045em; line-height:1.25; overflow-wrap:anywhere; font-variant-numeric:tabular-nums;}
-    .detail, .small {margin:0; font-size:12px; line-height:1.65; color:var(--radar-muted); overflow-wrap:anywhere;}
-    .quote {margin:18px 0 0; font-size:13px; line-height:1.65; overflow-wrap:anywhere;}
-    .link {display:inline-block; font-size:12px; font-weight:550; color:var(--radar-accent); text-decoration:underline; text-decoration-color:color-mix(in srgb, currentColor 40%, transparent); text-underline-offset:3px; overflow-wrap:anywhere;}
-    .link:hover {text-decoration-color:currentColor;}
-    .card > .link {margin-top:16px;}
-    .pending-value {font-size:15px; font-weight:550; margin:10px 0 6px; line-height:1.45; letter-spacing:-.015em;}
-    .meta {display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.5fr); gap:10px 16px; margin:18px 0 0; font-size:12px;}
-    .meta dt {color:var(--radar-muted);}
-    .meta dd {margin:0; text-align:right; overflow-wrap:anywhere;}
-    .timestamp {font-family:var(--font-mono, ui-monospace, "SFMono-Regular", Consolas, monospace); font-size:11px; font-variant-numeric:tabular-nums;}
-    .note {margin:20px 0 0; border:1px solid var(--radar-border); border-radius:9px; padding:12px 14px; font-size:12px; line-height:1.6; color:var(--radar-muted);}
-    .warning {color:var(--radar-warning); border-color:color-mix(in srgb, var(--radar-warning) 35%, var(--radar-bg)); background:color-mix(in srgb, var(--radar-warning) 5%, var(--radar-bg));}
-    .footer {margin:20px 0 0; font-size:11px; line-height:1.65; color:var(--radar-muted);}
-    @media (max-width:380px) {body {padding:24px 16px;} .head {gap:12px; margin-bottom:24px;} .card.big {padding:18px;} .brand {gap:8px;} .mark {width:28px; height:28px;} h1 {font-size:17px;} .refresh {padding:8px 10px;} .meta {gap:10px 12px;} }
-    @media (forced-colors:active) {.mark {color:CanvasText;} .pill::before {background:CanvasText;} .warning {border-color:CanvasText;} }
-  </style>
+  <link rel="stylesheet" href="./dashboard.css"/>
 </head>
 <body>
   <main class="wrap">
