@@ -15,7 +15,7 @@ function str(v: unknown): string | null {
 
 function time(v: unknown): string | null {
   const s = str(v);
-  return s && /(?:Z|[+-]\\d{2}:\\d{2})$/i.test(s) && Number.isFinite(Date.parse(s)) ? s : null;
+  return s && /(?:Z|[+-]\d{2}:\d{2})$/i.test(s) && Number.isFinite(Date.parse(s)) ? s : null;
 }
 
 function record(v: unknown) {
@@ -23,7 +23,7 @@ function record(v: unknown) {
   if (!r) return null;
   const s = obj(r.source);
   const url = s?.url ?? r.source_url;
-  const sourceUrl = typeof url === "string" && /^https:\\/\\//i.test(url) && url.length <= 2048
+  const sourceUrl = typeof url === "string" && /^https:\/\//i.test(url) && url.length <= 2048
     ? url : null;
   const item = {
     id: str(r.id),
