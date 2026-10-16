@@ -1,6 +1,6 @@
 # Reset Radar — Project Plan
 
-> **Status:** Host compatibility proven; Step 1 of live data integration next · **Last reviewed:** 16 October 2026  
+> **Status:** Host entrypoints and first live TIBO status tool verified; Step 2 dashboard in progress · **Last reviewed:** 16 October 2026  
 > **Repository:** https://github.com/mustafa-ramax/reset-radar  
 > **Target:** Read-only reset data in both ChatGPT conversation panel and left-sidebar app; public plugin later.  
 > **Principle:** Ship an accurate, lightweight read-only radar before adding features.
@@ -13,9 +13,19 @@
 - **Working entrypoints:** `thread` rendered in a real conversation-side panel; `global` displayed in the left sidebar as a dedicated app; model-invoked calls rendered inline. The owner also reported these working in their tested ChatGPT desktop/web, Work and Codex interfaces. This records **owner-confirmed user-visible behaviour**, not an independent automated cross-platform certification.
 - **Important discovery:** invoking the MCP tool from chat renders *inline*; opening the content tab via More tools accesses the `thread` panel. The `global` entry is accessed through the left sidebar. A screenshot-backed owner test established both surfaces.
 - **Build regression and recovery:** adding an optional SVG icon coincided with a Vercel TypeScript/lint build failure. We removed it on a feature branch, confirmed the preview build, and merged [PR #1](https://github.com/mustafa-ramax/reset-radar/pull/1) after Vercel reported READY for preview and production.
-- **Scope of this success:** only a static Hello World resource and read-only MCP tool. No live TIBO data, correctness checks, refresh behaviour, historical feeds, public distribution, quota monitoring or future reset guarantees have yet been demonstrated.
+- **Scope of this success (as of the original smoke test):** static Hello World resource and tool. The subsequent live TIBO tool was tested successfully on 16 October, as documented immediately below. No full provider-coverage certification, history, public directory submission or personal quota monitoring is implied.
 
-**Next controlled change (Step 1 only):** server-side fetch of the validated public `https://tibo.cc/api/v1/status` endpoint, with a bounded response, explicit freshness/error semantics and an independent read-only MCP tool. Preserve the existing Hello World UI unchanged for regression testing. No Codex Reset feed, ledger, visual redesign, polling or database in this step.
+**Step 1 complete; see live tool validation immediately below.** The first independent data tool was implemented without changing the original Hello World UI. Only TIBO was integrated.
+
+## Step 1 result — first live TIBO status tool verified (16 October 2026)
+
+**PASSED:** The personal Reset Radar plugin invoked `get_tibo_status({})` after deploying [PR #2](https://github.com/mustafa-ramax/reset-radar/pull/2). The host returned structured JSON with `provider: "TIBO"`, `state: "available"`, `upstreamStatus: "ok"`, a latest source-recorded completion post, source link, freshness timestamps, and no pending announcement in the returned snapshot. The response included a disclaimer about third-party community observations and personal-account limits.
+
+**Observed test snapshot, not a permanent fact:** checked `2026-10-16T10:51:35.822Z`; provider fetched `2026-10-16T10:49:00.752759+00:00`; latest completion post published `2026-10-15T06:28:13.000Z`, with [original evidence](https://x.com/thsottiaux/status/2110618732666257557). `scheduled_reset=null` did not prove complete future coverage. The `activeWatchPresent=true` field was returned but did not establish a verified future reset.
+
+**Validated:** live remote MCP tool call, normal-case public API response, state/freshness fields, original source URL and working production deployment. **Not yet validated:** actual failure injection, 429 and offline recovery, repeated refresh in a rendered dashboard, complete upstream announcement coverage, cross-provider reconciliation or any personal quota changes.
+
+**Step 2 scope (current):** replace the static Hello World UI with a responsive compact TIBO dashboard, retaining both `thread` and `global` entrypoints and the existing `get_tibo_status` tool. Use MCP Apps host bridge for one initial read and manual refresh, show last-recorded post, pending-announcement unknown/none-returned semantics, stale/unavailable states, provider timestamp and attribution. Do not add another data source, database, push alerts, background polling, user telemetry or personal-quota claims. A successful Vercel build is a gate, and user-visible host rendering is a **separate** acceptance gate.
 
 ## 1. Product goal
 
@@ -39,13 +49,13 @@ A private MCP plugin displays a usable panel in a real ChatGPT conversation, loa
 
 ### Verification boundary
 
-Live results were **reported by the owner's Codex test run** rather than fetched directly in this ChatGPT execution environment. Previous isolated-environment DNS failures and preliminary protocol checks remain documented as historical attempts. Existing upstream MCP clients completed a real SDK round-trip, but our own MCP endpoint is not yet built. Real ChatGPT `thread` rendering belongs to **Phase 4 integration**, not an impossible prerequisite for starting Phase 1. If the panel is unsupported in the account, record that failure and fall back to tool-only support rather than asserting success.
+Live results were **reported by the owner's Codex test run** rather than fetched directly in this ChatGPT execution environment. Previous isolated-environment DNS failures and preliminary protocol checks remain documented as historical attempts. Existing upstream MCP clients completed a real SDK round-trip. **Subsequent integration supersedes this historical limitation:** our own hosted MCP endpoint and ChatGPT `thread`/`global` Hello World rendering were owner-verified. The live TIBO status MCP tool was called successfully on 16 October.
 
 ### Early integration smoke test (15 October 2026)
 
 To reduce product risk, we started a **minimal Hello World panel test before the data/dashboard work**. One static `ui://reset-radar/hello.html` resource and a read-only `show_reset_radar_hello` tool are committed. A Vercel deployment of the GitHub `main` branch reached `READY` (project `reset-radar`; test MCP URL `https://reset-radar-eight.vercel.app/api/mcp`). **No upstream reset API calls exist in this build.**
 
-**Still unverified:** live MCP initialize/list/call against *our* endpoint, Vercel deployment-protection accessibility from ChatGPT, and actual `thread` side-panel rendering in the user's account. The project currently reports SSO protection `all_except_custom_domains`; verify public reachability before personal plugin installation. Treat a build-ready status as build success only. Do not start the full radar until the panel gate has passed or its limitations are understood.
+**Historical status as of initial smoke-test deployment:** runtime host checks were pending at that moment. They were subsequently owner-verified and the first live data tool was invoked successfully. Do not confuse an old checkpoint with current project status.
 
 ## 2. Starting position (15 October 2026)
 
