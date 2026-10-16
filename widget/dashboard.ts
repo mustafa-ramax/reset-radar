@@ -51,7 +51,9 @@ const displayItem = (value: unknown): Item | null => {
     ? (record[field] as string).trim().slice(0, limit) || null : null;
   const item = {
     id: text("id", 256), resetType: text("resetType", 256),
-    announcedAt: text("announcedAt", 256), textExcerpt: text("textExcerpt", 200),
+    announcedAt: text("announcedAt", 256),
+    textExcerpt: typeof record.textExcerpt === "string" && record.textExcerpt.trim()
+      ? record.textExcerpt.slice(0, 200) : null,
     originalPostUrl: typeof record.originalPostUrl === "string" && record.originalPostUrl.length <= 2048
       ? record.originalPostUrl : null,
   };
@@ -74,6 +76,9 @@ const showLink = (element: HTMLAnchorElement, url: unknown) => {
   element.hidden = !target;
   if (target) element.href = target;
   else element.removeAttribute("href");
+  const hostname = target ? new URL(target).hostname : "";
+  const isX = ["x.com", "twitter.com"].some(domain => hostname === domain || hostname.endsWith("." + domain));
+  element.textContent = isX ? "View original X post ↗" : "View original source ↗";
 };
 const set = (id: string, text: string) => { byId(id).textContent = text; };
 const notice = (message: string | null, warning = false) => {
@@ -95,6 +100,7 @@ function render(s: Snapshot) {
   const lastState = byId("last-state");
   lastState.textContent = s.state === "unavailable" ? "Unavailable"
     : !post ? "No source record returned"
+    : post.textExcerpt ? post.textExcerpt
     : post.resetType?.toLowerCase() === "completion" ? "Completion post reported"
     : post.resetType?.toLowerCase() === "recorded" ? "Recorded post" : "Reset-related post reported";
   byId("last-context").hidden = s.state !== "stale" || !post;
@@ -108,9 +114,6 @@ function render(s: Snapshot) {
   detail.hidden = !post;
   detail.textContent = post ? "Latest post timestamp: " + prettyTime(post.announcedAt, true)
     + (post.resetType ? " · Source classification: " + post.resetType : "") : "";
-  const excerpt = byId("last-excerpt");
-  excerpt.hidden = !post?.textExcerpt;
-  excerpt.textContent = post?.textExcerpt ? "“" + post.textExcerpt + "”" : "";
 
   if (s.state !== "available") {
     set("pending", "Unable to verify");
@@ -119,7 +122,7 @@ function render(s: Snapshot) {
     showLink(pendingLink, null);
   } else if (pending) {
     byId("pending-detail").hidden = false;
-    set("pending", "Announcement reported");
+    set("pending", pending.textExcerpt ?? "Announcement reported");
     const timestamp = prettyTime(pending.announcedAt);
     set("pending-detail", timestamp === "Unknown" ? "Post date unknown" : "Post date " + timestamp);
     showLink(pendingLink, pending.originalPostUrl);
