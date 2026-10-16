@@ -5,6 +5,7 @@ import {
   RESOURCE_MIME_TYPE,
 } from "@modelcontextprotocol/ext-apps/server";
 import { z } from "zod";
+import { getTiboStatus } from "../../../lib/tibo-status";
 
 // Phase 0.5: a disposable, intentionally static panel to test ChatGPT entrypoints.
 // No external reset feeds, authentication, storage, timers or personal data are involved.
@@ -60,6 +61,26 @@ const handler = createMcpHandler(
         content: [{ type: "text", text: "Reset Radar Hello World panel requested. No live reset data is connected." }],
         structuredContent: { message: "Hello from Reset Radar!", stage: "thread-panel-smoke-test" },
       }),
+    );
+
+    // Step 1 only: independently callable server-side data tool.
+    // No UI resource or entrypoint change: the Hello World panel remains as tested.
+    registerAppTool(
+      server,
+      "get_tibo_status",
+      {
+        title: "Get Reset Radar TIBO Status",
+        description: "Read the current public TIBO reset status with source freshness and original post links. Third-party observations only, not a personal ChatGPT quota status.",
+        inputSchema: z.object({}),
+        annotations: { readOnlyHint: true, openWorldHint: true },
+      },
+      async () => {
+        const status = await getTiboStatus();
+        return {
+          content: [{ type: "text", text: JSON.stringify(status) }],
+          structuredContent: { ...status },
+        };
+      },
     );
   },
   { serverInfo: { name: "reset-radar-smoke", version: "0.0.1" } },
