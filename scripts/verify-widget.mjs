@@ -21,4 +21,10 @@ if (/<script\b[^>]*\bsrc\s*=/i.test(html)) {
 if (!/<script\b/i.test(html)) {
   throw new Error("MCP widget has no bundled script");
 }
+if (!/<style\b[^>]*>\s*\S[\s\S]*?<\/style>/i.test(html)) {
+  throw new Error("MCP widget has no embedded CSS");
+}
+if (/<link\b[^>]*\brel\s*=\s*(?:"[^"]*\bstylesheet\b[^"]*"|'[^']*\bstylesheet\b[^']*'|stylesheet\b)/i.test(html)) {
+  throw new Error("MCP widget must be self-contained; found an external stylesheet");
+}
 console.log("MCP dashboard bundle validated (" + html.length + " characters)");

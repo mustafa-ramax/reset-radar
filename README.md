@@ -2,7 +2,7 @@
 
 A lightweight, open-source **ChatGPT MCP app** for viewing community-reported ChatGPT/Codex reset announcements. One public data provider for the current private MVP: [TIBO](https://tibo.cc/).
 
-**Status:** Step 2 dashboard owner-accepted on 16 October 2026 after testing ChatGPT `thread`, `global`, inline rendering, Refresh and X source links. Step 2.5 automated reliability checks are the next gate. This is not a public-plugin or cross-host certification.
+**Status:** Step 2.5 reliability testing is complete, with the production smoke test owner-accepted on 17/10/2026. The redesigned UI is awaiting acceptance in ChatGPT `thread`, `global` and inline views. This is not a public-plugin or cross-host certification.
 
 ## Current features
 
