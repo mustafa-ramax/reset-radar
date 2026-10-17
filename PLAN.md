@@ -53,6 +53,12 @@ Local validation passed: all 10 existing tests, typecheck, production build and 
 
 Vercel preview status and any access limitations are recorded in the PR. Real ChatGPT sidebar, right-panel and inline acceptance remain the owner's separate gate. Do not merge this follow-up until approved.
 
+## Step 4B follow-up — restore primary source content (17/10/2026; review pending)
+
+[PR #8](https://github.com/mustafa-ramax/reset-radar/pull/8) is merged. Its collapsed excerpt placement hid the primary evidence from the default view. This focused follow-up restores latest-post and pending-announcement excerpts as primary text, with post dates and original links below. Generic report labels remain fallbacks for missing excerpts. Source details no longer repeats the excerpt. Validated X/Twitter links use **View original X post**; other sources use **View original source**. Text remains safely rendered with the existing 200-character bound. Stale historical evidence and uncertain upcoming/unavailable states retain their existing handling.
+
+All 10 existing tests and eight focused widget regression tests pass, as do typecheck, self-contained CSS/JS validation and the production build. Browser fixtures passed both themes at 280/360/640px with normal and long excerpts, keyboard disclosure/focus, loading, stale/unavailable/partial/invalid states, Refresh and host link handling. Expanded details and 200% text at 280px had no horizontal overflow. Screenshots remain outside the repository. No provider, MCP, Refresh, styling, settings, dependency or infrastructure changes. Vercel Preview status and browser-console limitations are recorded in the new PR; real ChatGPT acceptance remains separate.
+
 ## 1. Product goal
 
 Build an open-source **Reset Radar** that displays publicly reported ChatGPT/Codex usage-limit reset announcements and recorded resets **beside an active ChatGPT conversation**.

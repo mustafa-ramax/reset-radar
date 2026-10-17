@@ -7,8 +7,8 @@ A lightweight, open-source **ChatGPT MCP app** for viewing community-reported Ch
 ## Current features
 
 - Same MCP App in the ChatGPT left sidebar (`global`), right conversation tab (`thread`) and inline tool output.
-- Latest TIBO source-recorded completion/reset post with its original evidence link.
-- Upcoming reports first, followed by the latest reset-related post and source update time. Stale/unavailable warnings stay visible; diagnostics, excerpts and the full disclaimer are in collapsed **Source details**.
+- Latest TIBO source-recorded completion/reset post with its source excerpt, post date and original evidence link.
+- Upcoming reports first, showing announcement excerpts when available, followed by the latest reset-related post and source update time. Stale/unavailable warnings stay visible; diagnostics and the full disclaimer are in collapsed **Source details**. Generic report labels appear only when an excerpt is missing.
 - Manual **Refresh** using the official MCP Apps host bridge and read-only `get_tibo_status` tool.
 - No personal ChatGPT account access, database, analytics, background polling or forecasts.
 
