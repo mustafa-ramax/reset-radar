@@ -20,7 +20,7 @@ TIBO's simultaneous response included six original posts and eight event IDs als
 
 TIBO's latest post `2110618732666257557` ("Done and dusted https://t.co/0fehr43VS4") was absent from the Codex Reset snapshot. Any usable TIBO latest post remains primary, including clearly labelled stale history. Only when TIBO has no usable latest record can a Codex Reset provider-recorded event supply a labelled fallback. Original text is preferred; archive-only provider summaries are explicitly labelled and unknown post publication times stay unknown.
 
-Duplicate matching uses validated original X/Twitter post identities, including domain aliases and tracking-query variants. Different posts about the same underlying reset are not merged or counted as independent confirmation. Raw provider records and classifications remain available in the combined result. A pending record that duplicates recorded/expired/inactive evidence from a fresh Codex Reset snapshot is withheld with an uncertainty warning; stale supplemental data cannot suppress fresh TIBO announcements. Duplicates of the displayed latest post are also withheld. The original TIBO payload is retained unchanged.
+Duplicate matching uses validated original X/Twitter post identities, including domain aliases and tracking-query variants. Different posts about the same underlying reset are not merged or counted as independent confirmation. Raw provider records and classifications stay inside aggregation; the public combined result retains bounded selection evidence and duplicate provenance. A pending record that duplicates recorded/expired/inactive evidence from a fresh Codex Reset snapshot is withheld with an uncertainty warning; stale supplemental data cannot suppress fresh TIBO announcements. Duplicates of the displayed latest post are also withheld. The original TIBO tool payload is retained unchanged.
 
 A Codex Reset hint may appear only with a fresh provider, an explicitly active signal, matching hint record, valid publication time within a local 24-hour display bound, no expired verification flag, no duplicate displayed evidence, and a time after the displayed recorded post. It is labelled **Hint only · not a confirmed announcement**, keeps its excerpt and source link, and has visible linked credit. The 24-hour bound is not an execution deadline. Historical/inactive/expired hints remain tool evidence only. Current captured data has no eligible hint.
 
@@ -28,8 +28,31 @@ A Codex Reset hint may appear only with a fresh provider, an explicitly active s
 
 The adapter limits streamed responses to 256 KiB, each array to 200 records and text to 16,384 characters. Duplicate IDs or invalid envelopes fail conservatively. It validates HTTPS links without credentials. It caches success and failure for at least 60 seconds, coalesces concurrent calls, rechecks publication expiry on cached reads, honours numeric and HTTP-date Retry-After, and uses Next's existing shared fetch cache. Cache and cooldown state are per server instance; a deployment-wide 429 lock is not guaranteed across cold instances. No new infrastructure is introduced.
 
-`get_tibo_status` and its adapter are unchanged. The new `get_reset_radar` returns separate provider snapshots, selected display evidence and duplicate provenance; aggregate availability does not imply both providers are healthy. The existing dashboard opener now returns this combined payload. Refresh still makes one initial/manual call, blocks overlap and has no retries or polling; it calls the combined tool. Existing resource URI and thread/global entrypoints are preserved.
+`get_tibo_status` and its adapter are unchanged. The new `get_reset_radar` returns separate provider health/freshness, selected display evidence and bounded duplicate provenance; aggregate availability does not imply both providers are healthy. The existing dashboard opener returns the same compact public shape. Both use a short source-attributed text summary rather than a second JSON snapshot. Refresh still makes one initial/manual call, blocks overlap and has no retries or polling; it calls the combined tool. Existing resource URI and thread/global entrypoints are preserved.
 
 Sanitised live subsets are in `tests/fixtures/codex-reset-feed.json` and `tests/fixtures/tibo-step3a.json`. Engagement counts, profile details, unrelated operational metadata and forecasts are omitted. Original text, IDs, timestamps and classifications are unchanged. Tests clearly mark synthetic variations for active hints, failures and missing fields, which were not present in the successful live snapshot.
 
 Automated and browser verification, production MCP smoke results, Vercel Preview status and remaining acceptance limits are recorded in the PR. Real ChatGPT acceptance remains separate. No claim of account-level resets, independent event confirmation or complete coverage is made.
+
+## Review follow-up — compact public response and quieter footer
+
+Projection runs after `combineResetRadar`; classification, selection, caching and duplicate matching are unchanged. The full archive stays available to server-side aggregation for later Step 3B. Neither combined tool exposes a history parameter or archive by default. `get_tibo_status` is unchanged.
+
+Fields kept public for concrete consumers:
+
+- The widget needs selected latest/pending/hint excerpts, original URLs, post dates, provider identity/state, text basis, Upcoming state/warning, each provider's health/freshness and attribution. It does not need the full archive or repeated selected posts nested under TIBO.
+- Downstream consumers can inspect `selectionEvidence` to distinguish original text/publication time from a provider event summary/event time and see the classification/verification provenance behind a selected or withheld record. Excerpts and summaries are capped at 200 characters; at most seven relevant Codex records are included (selected latest/hint, a conflicting record and four overlap examples). Conflicting evidence survives even when overlap examples are truncated. An applicable signal and withheld TIBO announcement retain the reason for uncertainty without exposing unrelated historical signals.
+- `duplicates` includes at most four matches, plus `duplicateCount` and `duplicatesTruncated`, so omitted matches are explicit. Full matching records remain internal. No independent confirmation is implied.
+
+The footer retains visible linked **Data: codex-reset.com**. Routine Codex Reset health and precise timestamps are in Source details. Stale/unavailable/uncertain-coverage warnings remain visible beside Upcoming. Excerpts and original links keep their existing position.
+
+Approximate payload measurement uses UTF-8 bytes of serialised MCP result JSON, excluding HTTP/JSON-RPC framing and compression. Before and after use the same inputs and timestamps; the baseline reproduces the previous text and structured results.
+
+| Sample | Result | Before bytes | After bytes | Reduction |
+| --- | --- | ---: | ---: | ---: |
+| Committed sanitised fixture (5 records) | `get_reset_radar` | 10,408 | 2,215 | 78.7% |
+| Committed sanitised fixture (5 records) | Dashboard opener | 5,122 | 2,215 | 56.8% |
+| Previous captured live snapshot (108 records; retained outside repo) | `get_reset_radar` | 117,607 | 2,214 | 98.1% |
+| Previous captured live snapshot (108 records; retained outside repo) | Dashboard opener | 56,480 | 2,214 | 96.1% |
+
+The corresponding structured status shrinks from 4,937 to 1,824 bytes for the committed fixture, and from 56,295 to 1,823 bytes for the captured snapshot. Sizes vary with selected/withheld evidence and warnings; these are measurements, not fixed-size promises.

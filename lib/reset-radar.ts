@@ -97,5 +97,61 @@ export function combineResetRadar(tibo: TiboStatus, codexReset: CodexResetStatus
 
 export async function getResetRadar() {
   const [tibo, codexReset] = await Promise.all([getTiboStatus(), getCodexResetStatus()]);
-  return combineResetRadar(tibo, codexReset);
+  return projectResetRadar(combineResetRadar(tibo, codexReset));
+}
+
+// Keep the archive inside aggregation. Public status carries only the evidence behind
+// selected/withheld items and a bounded overlap summary; history belongs to Step 3B.
+export function projectResetRadar(status: ReturnType<typeof combineResetRadar>) {
+  const { providers, duplicates, ...selected } = status;
+  const { latestRecordedReset: tiboLatest, pendingAnnouncement: tiboPending, ...tiboHealth } = providers.tibo;
+  const { records, signal, ...codexHealth } = providers.codexReset;
+  const overlap = duplicates.slice(0, 4);
+  const withheld = tiboPending && !status.pendingAnnouncement ? tiboPending : null;
+  const withheldKey = originalPostKey(withheld?.originalPostUrl ?? null);
+  const conflictingRecord = codexHealth.state === "available" && withheldKey ? records.find(record =>
+    originalPostKey(record.originalPostUrl) === withheldKey
+    && (record.classification === "recorded" || record.verificationStatus === "expired")) : null;
+  const ids = new Set([
+    status.latestRecordedReset?.provider === "Codex Reset" ? status.latestRecordedReset.id : null,
+    status.hint?.id, conflictingRecord?.id, ...overlap.map(item => item.codexResetId),
+  ].filter(Boolean));
+  const signalRelevant = status.hint || (withheldKey && originalPostKey(signal?.originalPostUrl ?? null) === withheldKey);
+  return {
+    ...selected, providers: { tibo: tiboHealth, codexReset: codexHealth },
+    duplicates: overlap, duplicateCount: duplicates.length, duplicatesTruncated: duplicates.length > overlap.length,
+    selectionEvidence: {
+      codexReset: records.filter(record => ids.has(record.id)).slice(0, 7).map(record => ({
+        id: record.id, originalPostUrl: record.originalPostUrl, textExcerpt: record.text?.slice(0, 200) ?? null,
+        publishedAt: record.publishedAt, classification: record.classification, kind: record.kind,
+        verificationStatus: record.verificationStatus,
+        event: record.event ? { ...record.event, summary: record.event.summary?.slice(0, 200) ?? null } : null,
+      })),
+      signal: signalRelevant && signal ? { ...signal, text: signal.text?.slice(0, 200) ?? null } : null,
+      withheldAnnouncement: withheld,
+      // A repeated latest post can explain withholding even when Codex Reset has no matching post.
+      latestTiboId: withheld && tiboLatest ? tiboLatest.id : null,
+    },
+  };
+}
+
+export function resetRadarToolResult(status: ReturnType<typeof projectResetRadar>) {
+  const latest = status.latestRecordedReset;
+  const pending = status.pendingAnnouncement;
+  const hints = status.hint;
+  const warnings = [status.providers.tibo.warning, status.providers.codexReset.warning, status.upcomingWarning]
+    .filter(Boolean).join(" ");
+  const summary = [
+    "Reset Radar — TIBO: " + status.providers.tibo.state + "; Codex Reset: " + status.providers.codexReset.state + ".",
+    latest ? "Latest (" + latest.provider + ", " + latest.textBasis + "; post date "
+      + (latest.announcedAt ?? "unknown") + "): " + (latest.textExcerpt ?? "Recorded post reported")
+      : "Latest post unavailable or not returned.",
+    pending ? "Announcement (TIBO; post date " + (pending.announcedAt ?? "unknown") + "): "
+      + (pending.textExcerpt ?? "Announcement reported")
+      : status.upcomingState === "available" ? "No announcement returned by TIBO." : "Upcoming status unknown.",
+    hints ? "Hint only, not a confirmed announcement: " + hints.textExcerpt : null,
+    warnings || null,
+    "Community reports, not personal quota confirmation. Provider agreement is not independent evidence. Data: https://codex-reset.com/.",
+  ].filter(Boolean).join("\n");
+  return { content: [{ type: "text" as const, text: summary }], structuredContent: { ...status } };
 }

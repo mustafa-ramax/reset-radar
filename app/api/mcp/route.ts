@@ -8,7 +8,7 @@ import { z } from "zod";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { getTiboStatus } from "../../../lib/tibo-status";
-import { getResetRadar } from "../../../lib/reset-radar";
+import { getResetRadar, resetRadarToolResult } from "../../../lib/reset-radar";
 
 // Keep the existing tool identifier for installed plugin compatibility.
 // A new resource URI avoids accidentally loading the cached Hello World iframe.
@@ -36,11 +36,7 @@ const handler = createMcpHandler(
       },
       async () => {
         const status = await getResetRadar();
-        return {
-          content: [{ type: "text", text: "Reset Radar status: " + status.state
-            + ". Public source reports; personal account reset is not verified. Data: https://codex-reset.com/." }],
-          structuredContent: { ...status },
-        };
+        return resetRadarToolResult(status);
       },
     );
 
@@ -55,7 +51,7 @@ const handler = createMcpHandler(
       },
       async () => {
         const status = await getResetRadar();
-        return { content: [{ type: "text", text: JSON.stringify(status) }], structuredContent: { ...status } };
+        return resetRadarToolResult(status);
       },
     );
 

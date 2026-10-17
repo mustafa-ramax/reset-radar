@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 import { createCodexResetReader } from "../lib/codex-reset-status.ts";
-import { combineResetRadar, originalPostKey, getResetRadar } from "../lib/reset-radar.ts";
+import { combineResetRadar, originalPostKey, getResetRadar, projectResetRadar, resetRadarToolResult } from "../lib/reset-radar.ts";
 
 const fixture = JSON.parse(await readFile(new URL("./fixtures/codex-reset-feed.json", import.meta.url), "utf8"));
 const tiboFixture = JSON.parse(await readFile(new URL("./fixtures/tibo-step3a.json", import.meta.url), "utf8"));
@@ -258,4 +258,121 @@ test("combined tool invokes both independent adapters without changing the TIBO 
   assert.equal(result.providers.tibo.state, "available");
   assert.equal(result.providers.codexReset.state, "unavailable");
   assert.equal(result.latestRecordedReset.textExcerpt, tiboFixture.data.latest_reset.text);
+});
+
+test("public status omits archives while preserving selected evidence, independent health and date semantics", async () => {
+  const codex = await load();
+  const cases = [combineResetRadar(tibo(), codex, NOW)];
+  for (const state of ["stale", "unavailable"]) {
+    cases.push(combineResetRadar(tibo({ state }), codex, NOW));
+    cases.push(combineResetRadar(tibo(), { ...codex, state }, NOW));
+  }
+  cases.push(combineResetRadar(tibo({ state: "unavailable", latestRecordedReset: null }), codex, NOW));
+  cases.push(combineResetRadar(tibo({ state: "unavailable", latestRecordedReset: null }),
+    { ...codex, state: "unavailable", records: [], signal: null }, NOW));
+  for (const internal of cases) {
+    const result = resetRadarToolResult(projectResetRadar(internal));
+    const projected = result.structuredContent;
+    for (const key of ["latestRecordedReset", "pendingAnnouncement", "hint", "upcomingState", "upcomingWarning", "source", "attribution"]) {
+      assert.deepEqual(projected[key], internal[key]);
+    }
+    for (const [name, provider] of Object.entries(internal.providers)) {
+      for (const key of ["provider", "state", "checkedAt", "providerFetchedAt", "warning"]) {
+        assert.equal(projected.providers[name][key], provider[key]);
+      }
+    }
+    for (const key of ["publishedCheckedAt", "publishedExpiresAt", "retryAt", "sourceScope"]) {
+      assert.equal(projected.providers.codexReset[key], internal.providers.codexReset[key]);
+    }
+    assert.equal("records" in projected.providers.codexReset, false);
+    assert.equal("signal" in projected.providers.codexReset, false);
+    assert.equal("latestRecordedReset" in projected.providers.tibo, false);
+    assert.equal("pendingAnnouncement" in projected.providers.tibo, false);
+    assert.match(result.content[0].text, /TIBO: .*Codex Reset:/);
+    assert.match(result.content[0].text, /Data: https:\/\/codex-reset.com\//);
+    assert.match(result.content[0].text, /not independent evidence/);
+    assert.doesNotMatch(result.content[0].text, /"providers"|"records"|"structuredContent"/);
+    assert.notEqual(result.content[0].text, JSON.stringify(projected));
+    assert.ok(result.content[0].text.length < 2000);
+  }
+  assert.equal(codex.records.length, fixture.body.tweets.length); // projection did not mutate the archive
+});
+
+test("projected fallback and withheld evidence preserve original text versus provider summaries", async () => {
+  const codex = await load();
+  const record = codex.records.find(item => item.classification === "recorded");
+  const pending = { id: record.id, textExcerpt: "Original source announcement", announcedAt: record.publishedAt,
+    originalPostUrl: record.originalPostUrl, resetType: "regular" };
+  const internal = combineResetRadar(tibo({ pendingAnnouncement: pending }), codex, NOW);
+  const projected = projectResetRadar(internal);
+  assert.equal(projected.pendingAnnouncement, null);
+  assert.equal(projected.upcomingState, "unknown");
+  assert.deepEqual(projected.selectionEvidence.withheldAnnouncement, pending);
+  const evidence = projected.selectionEvidence.codexReset.find(item => item.id === record.id);
+  assert.equal(evidence.textExcerpt, record.text.slice(0, 200));
+  assert.equal(evidence.publishedAt, record.publishedAt);
+  assert.equal(evidence.event.announcedAt, record.event.announcedAt);
+  assert.equal(evidence.event.announcementState, "announced");
+  assert.equal(evidence.verificationStatus, "expired");
+  for (const item of codex.records) { item.text = null; item.publishedAt = null; }
+  const fallback = projectResetRadar(combineResetRadar(tibo({ state: "unavailable", latestRecordedReset: null }), codex, NOW));
+  assert.equal(fallback.latestRecordedReset.textBasis, "provider summary");
+  assert.equal(fallback.latestRecordedReset.announcedAt, null);
+  assert.equal(fallback.selectionEvidence.codexReset[0].textExcerpt, null);
+  assert.ok(fallback.selectionEvidence.codexReset[0].event.summary);
+});
+
+test("projected hint stays bounded and expired/inactive/duplicate signals cannot become announcements", async () => {
+  const codex = await load();
+  const signalRecord = codex.records.find(item => item.id === codex.signal.id);
+  codex.signal.active = true;
+  codex.signal.at = new Date(NOW - 1000).toISOString();
+  signalRecord.publishedAt = codex.signal.at;
+  let projected = projectResetRadar(combineResetRadar(tibo(), codex, NOW));
+  assert.equal(projected.hint.classification, "hint");
+  assert.equal(projected.pendingAnnouncement, null);
+  assert.equal(projected.selectionEvidence.signal.active, true);
+  assert.equal(projected.selectionEvidence.codexReset[0].kind, "signal");
+  signalRecord.verificationStatus = "expired";
+  projected = projectResetRadar(combineResetRadar(tibo(), codex, NOW));
+  assert.equal(projected.hint, null);
+  assert.equal(projected.selectionEvidence.signal, null);
+  codex.signal.active = false;
+  assert.equal(projectResetRadar(combineResetRadar(tibo(), codex, NOW)).hint, null);
+});
+
+test("public duplicate evidence is capped and reports omitted matches without discarding the internal archive", async () => {
+  const codex = await load();
+  const source = codex.records[0];
+  codex.records = Array.from({ length: 100 }, (_, i) => ({ ...source, id: String(i), text: "x".repeat(16000) }));
+  const primary = tibo();
+  primary.latestRecordedReset.originalPostUrl = source.originalPostUrl;
+  const internal = combineResetRadar(primary, codex, NOW);
+  const projected = projectResetRadar(internal);
+  assert.equal(internal.duplicates.length, 100);
+  assert.equal(internal.providers.codexReset.records.length, 100);
+  assert.equal(projected.duplicates.length, 4);
+  assert.equal(projected.duplicateCount, 100);
+  assert.equal(projected.duplicatesTruncated, true);
+  assert.ok(projected.selectionEvidence.codexReset.length <= 7);
+  assert.ok(projected.selectionEvidence.codexReset.every(item => item.textExcerpt.length <= 200));
+  const before = Buffer.byteLength(JSON.stringify({ content: [{ type: "text", text: JSON.stringify(internal) }], structuredContent: internal }));
+  const after = Buffer.byteLength(JSON.stringify(resetRadarToolResult(projected)));
+  assert.ok(after < before / 10);
+  const conflict = { ...source, id: "pending-conflict", classification: "hint", verificationStatus: "expired",
+    originalPostUrl: "https://x.com/example/status/999" };
+  codex.records.push(conflict);
+  primary.pendingAnnouncement = { id: "pending", originalPostUrl: conflict.originalPostUrl, textExcerpt: "Withheld announcement" };
+  const crowded = projectResetRadar(combineResetRadar(primary, codex, NOW));
+  assert.equal(crowded.duplicates.length, 4);
+  assert.equal(crowded.pendingAnnouncement, null);
+  assert.ok(crowded.selectionEvidence.codexReset.some(item => item.id === "pending-conflict"));
+});
+
+test("both combined MCP entrypoints use the compact result helper; original TIBO tool stays separate", async () => {
+  const route = await readFile(new URL("../app/api/mcp/route.ts", import.meta.url), "utf8");
+  assert.equal((route.match(/return resetRadarToolResult\(status\)/g) ?? []).length, 2);
+  const original = route.slice(route.indexOf('"get_tibo_status"'));
+  assert.match(original, /await getTiboStatus\(\)/);
+  assert.match(original, /text: JSON.stringify\(status\)/);
 });
