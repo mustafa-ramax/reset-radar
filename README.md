@@ -1,6 +1,6 @@
 # Reset Radar
 
-A lightweight, open-source **ChatGPT MCP app** for viewing community-reported ChatGPT/Codex reset announcements. One public data provider for the current private MVP: [TIBO](https://tibo.cc/).
+A lightweight, open-source **ChatGPT MCP app** for viewing community-reported ChatGPT/Codex reset announcements. [TIBO](https://tibo.cc/) is the primary provider. Supplemental data: [codex-reset.com](https://codex-reset.com/).
 
 **Status:** Step 2.5 reliability testing is complete, with the production smoke test owner-accepted on 17/10/2026. Step 4A styling is merged. The Step 4B minimalist dashboard is awaiting separate acceptance in ChatGPT `thread`, `global` and inline views. This is not a public-plugin or cross-host certification.
 
@@ -9,7 +9,8 @@ A lightweight, open-source **ChatGPT MCP app** for viewing community-reported Ch
 - Same MCP App in the ChatGPT left sidebar (`global`), right conversation tab (`thread`) and inline tool output.
 - Latest TIBO source-recorded completion/reset post with its source excerpt, post date and original evidence link.
 - Upcoming reports first, showing announcement excerpts when available, followed by the latest reset-related post and source update time. Stale/unavailable warnings stay visible; diagnostics and the full disclaimer are in collapsed **Source details**. Generic report labels appear only when an excerpt is missing.
-- Manual **Refresh** using the official MCP Apps host bridge and read-only `get_tibo_status` tool.
+- Manual **Refresh** using the official MCP Apps host bridge, with no automatic polling or retries.
+- Step 3A adds `get_reset_radar`, used by the dashboard's initial read and manual Refresh. It keeps separate provider health and original evidence; `get_tibo_status` remains available unchanged. Eligible Codex Reset hints are clearly labelled, never confirmed upcoming announcements. Linked Codex Reset credit remains visible outside Source details.
 - No personal ChatGPT account access, database, analytics, background polling or forecasts.
 
 **Important:** A published post or community observation is **not proof your account's limits have reset**. No reported upcoming announcement means none was returned by the source; coverage is not guaranteed.
@@ -47,10 +48,12 @@ The dashboard follows host theme colours and typography, with system light/dark 
 
 ## Scope and limitations
 
-- Provider: `https://tibo.cc/api/v1/status` only. No other providers are included yet.
-- The server caches public API reads for approximately 5 minutes and enforces an 8-second timeout; pressing Refresh might legitimately return the same source snapshot.
+- Providers: `https://tibo.cc/api/v1/status` and `https://codex-reset.com/api/feed`. Data: [codex-reset.com](https://codex-reset.com/). These may relay the same original posts; provider agreement is not independent confirmation.
+- TIBO retains its approximately five-minute cache. Codex Reset uses at least a one-minute cache, coalesced requests and Retry-After handling. Both use an eight-second timeout; Refresh may legitimately return the same source snapshot. Codex Reset cache/cooldown state is per server instance, with Next's existing shared fetch cache; a global cooldown across cold instances is not guaranteed.
 - UI has no automatic polling, writes, authentication or tracking.
 - Source outage and upstream ambiguity are displayed as unknown or unavailable.
 - No promise of personal usage-limit reset, exact execution time, provider-wide coverage, or compatibility in untested host versions.
 
 See [PLAN.md](PLAN.md) for milestones and [Phase 0 validation](docs/phase-0-validation.md) for source evaluation. This project is still an early personal MVP, not an official OpenAI application or approved directory listing.
+
+See [Step 3A contract validation](docs/step3a-validation.md) for live findings, overlap, source priority, classification rules, sanitised fixtures and limits. A Codex Reset fallback never replaces usable TIBO history. Unknown post dates remain unknown; archive summaries are labelled separately from original excerpts.

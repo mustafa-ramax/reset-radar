@@ -147,9 +147,9 @@ test("excerpts remain literal text, preserve wording and keep the existing lengt
   }
 });
 
-test("Refresh still calls the same read-only tool once, blocks overlap and recovers after failure", async () => {
+test("Refresh calls the combined read-only tool once, blocks overlap and recovers after failure", async () => {
   const ui = await dashboard();
-  assert.equal(JSON.stringify(ui.app.calls), '[{"name":"get_tibo_status","arguments":{}}]');
+  assert.equal(JSON.stringify(ui.app.calls), '[{"name":"get_reset_radar","arguments":{}}]');
   let release;
   ui.app.result = () => new Promise(resolve => { release = resolve; });
   ui.click("refresh");
@@ -168,4 +168,63 @@ test("Refresh still calls the same read-only tool once, blocks overlap and recov
   assert.equal(ui.app.calls.length, 3);
   assert.equal(ui.element("last-state").textContent, excerpt);
   assert.equal(ui.element("refresh").textContent, "↻ Refresh");
+});
+
+function combined(overrides = {}) {
+  return { provider: "Reset Radar", state: "available", upcomingState: "available",
+    latestRecordedReset: { ...post, provider: "TIBO", textBasis: "original post" },
+    pendingAnnouncement: null, hint: null,
+    providers: {
+      tibo: snapshot(),
+      codexReset: { provider: "Codex Reset", state: "available", providerFetchedAt: "2026-10-17T00:00:00Z" },
+    }, ...overrides };
+}
+
+test("combined dashboard keeps both source excerpts prominent with visible linked credit outside details", async () => {
+  const ui = await dashboard();
+  const announcement = "Original upcoming announcement https://t.co/example";
+  ui.render(combined({ pendingAnnouncement: { ...post, textExcerpt: announcement } }));
+  assert.equal(ui.element("last-state").textContent, excerpt);
+  assert.equal(ui.element("pending").textContent, announcement);
+  assert.equal(ui.element("codex-credit").hidden, false);
+  assert.ok(html.indexOf('id="codex-credit"') < html.indexOf('<details'));
+  assert.match(html, /id="codex-link" href="https:\/\/codex-reset.com\/"/);
+  ui.element("codex-link").href = "https://codex-reset.com/";
+  ui.click("codex-link");
+  assert.equal(ui.app.links.at(-1), "https://codex-reset.com/");
+  ui.render(combined({ hint: { ...post, classification: "hint", textExcerpt: "Source hint only" } }));
+  assert.equal(ui.element("hint-report").hidden, false);
+  assert.equal(ui.element("hint-text").textContent, "Source hint only");
+  assert.equal(ui.element("pending").textContent, "No announcement reported");
+  assert.match(html, /Hint only · not a confirmed announcement/);
+  assert.match(html, /id="hint-credit" href="https:\/\/codex-reset.com\/"/);
+});
+
+test("combined dashboard failures retain valid primary/fallback content with correct credit and uncertainty", async () => {
+  const ui = await dashboard();
+  const value = combined();
+  value.providers.codexReset.state = "unavailable";
+  ui.render(value);
+  assert.equal(ui.element("last-state").textContent, excerpt);
+  assert.match(ui.element("feedback").textContent, /Codex Reset unavailable/);
+  assert.equal(ui.element("codex-credit").hidden, false);
+  value.providers.tibo.state = "unavailable";
+  value.providers.codexReset.state = "available";
+  value.upcomingState = "unknown";
+  value.latestRecordedReset = { ...post, provider: "Codex Reset", textBasis: "provider summary", textExcerpt: "Provider summary" };
+  ui.render(value);
+  assert.equal(ui.element("last-state").textContent, "Provider summary");
+  assert.equal(ui.element("latest-provider").hidden, false);
+  assert.match(ui.element("latest-provider").textContent, /provider summary, not original post text/);
+  assert.equal(ui.element("freshness-provider").textContent, "Codex Reset");
+  assert.equal(ui.element("pending").textContent, "Unable to verify");
+  assert.match(ui.element("feedback").textContent, /TIBO unavailable/);
+  value.providers.codexReset.state = "stale";
+  value.hint = { ...post, classification: "hint" };
+  ui.render(value);
+  assert.equal(ui.element("hint-report").hidden, true);
+  assert.equal(ui.element("last-context").hidden, false);
+  ui.render(snapshot());
+  assert.equal(ui.element("codex-credit").hidden, true);
+  assert.equal(ui.element("freshness-provider").textContent, "TIBO");
 });

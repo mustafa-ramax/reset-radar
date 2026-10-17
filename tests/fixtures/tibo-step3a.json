@@ -1,0 +1,20 @@
+{
+  "fetched_at": "2026-10-17T00:13:00.995094+00:00",
+  "stale": false,
+  "upstream_status": "ok",
+  "data": {
+    "latest_reset": {
+      "id": "2110618732666257557",
+      "reset_type": "regular",
+      "announced_at": "2026-10-15T06:28:13.000Z",
+      "text": "Done and dusted https://t.co/0fehr43VS4",
+      "source": {
+        "type": "x_post",
+        "author": "thsottiaux",
+        "url": "https://x.com/thsottiaux/status/2110618732666257557"
+      }
+    },
+    "scheduled_reset": null,
+    "active_watch": null
+  }
+}
