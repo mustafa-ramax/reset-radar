@@ -3,6 +3,8 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 import vm from "node:vm";
 import ts from "typescript";
+import { createCodexResetReader } from "../lib/codex-reset-status.ts";
+import { combineResetRadar, projectResetRadar } from "../lib/reset-radar.ts";
 
 const html = await readFile(new URL("../widget/dashboard.html", import.meta.url), "utf8");
 const source = await readFile(new URL("../widget/dashboard.ts", import.meta.url), "utf8");
@@ -147,9 +149,9 @@ test("excerpts remain literal text, preserve wording and keep the existing lengt
   }
 });
 
-test("Refresh still calls the same read-only tool once, blocks overlap and recovers after failure", async () => {
+test("Refresh calls the combined read-only tool once, blocks overlap and recovers after failure", async () => {
   const ui = await dashboard();
-  assert.equal(JSON.stringify(ui.app.calls), '[{"name":"get_tibo_status","arguments":{}}]');
+  assert.equal(JSON.stringify(ui.app.calls), '[{"name":"get_reset_radar","arguments":{}}]');
   let release;
   ui.app.result = () => new Promise(resolve => { release = resolve; });
   ui.click("refresh");
@@ -168,4 +170,117 @@ test("Refresh still calls the same read-only tool once, blocks overlap and recov
   assert.equal(ui.app.calls.length, 3);
   assert.equal(ui.element("last-state").textContent, excerpt);
   assert.equal(ui.element("refresh").textContent, "↻ Refresh");
+});
+
+function combined(overrides = {}) {
+  return { provider: "Reset Radar", state: "available", upcomingState: "available",
+    latestRecordedReset: { ...post, provider: "TIBO", textBasis: "original post" },
+    pendingAnnouncement: null, hint: null,
+    providers: {
+      tibo: snapshot(),
+      codexReset: { provider: "Codex Reset", state: "available", providerFetchedAt: "2026-10-17T00:00:00Z" },
+    }, ...overrides };
+}
+
+test("combined dashboard keeps both source excerpts prominent with visible linked credit outside details", async () => {
+  const ui = await dashboard();
+  const announcement = "Original upcoming announcement https://t.co/example";
+  ui.render(combined({ pendingAnnouncement: { ...post, textExcerpt: announcement } }));
+  assert.equal(ui.element("last-state").textContent, excerpt);
+  assert.equal(ui.element("pending").textContent, announcement);
+  assert.equal(ui.element("codex-credit").hidden, false);
+  assert.ok(html.indexOf('id="codex-credit"') < html.indexOf('<details'));
+  assert.match(html, /id="codex-link" href="https:\/\/codex-reset.com\/"/);
+  ui.element("codex-link").href = "https://codex-reset.com/";
+  ui.click("codex-link");
+  assert.equal(ui.app.links.at(-1), "https://codex-reset.com/");
+  ui.render(combined({ hint: { ...post, classification: "hint", textExcerpt: "Source hint only" } }));
+  assert.equal(ui.element("hint-report").hidden, false);
+  assert.equal(ui.element("hint-text").textContent, "Source hint only");
+  assert.equal(ui.element("pending").textContent, "No announcement reported");
+  assert.match(html, /Hint only · not a confirmed announcement/);
+  assert.match(html, /id="hint-credit" href="https:\/\/codex-reset.com\/"/);
+});
+
+test("combined dashboard failures retain valid primary/fallback content with correct credit and uncertainty", async () => {
+  const ui = await dashboard();
+  const value = combined();
+  value.providers.codexReset.state = "unavailable";
+  ui.render(value);
+  assert.equal(ui.element("last-state").textContent, excerpt);
+  assert.match(ui.element("feedback").textContent, /Codex Reset unavailable/);
+  assert.equal(ui.element("codex-credit").hidden, false);
+  value.providers.tibo.state = "unavailable";
+  value.providers.codexReset.state = "available";
+  value.upcomingState = "unknown";
+  value.latestRecordedReset = { ...post, provider: "Codex Reset", textBasis: "provider summary", textExcerpt: "Provider summary" };
+  ui.render(value);
+  assert.equal(ui.element("last-state").textContent, "Provider summary");
+  assert.equal(ui.element("latest-provider").hidden, false);
+  assert.match(ui.element("latest-provider").textContent, /provider summary, not original post text/);
+  assert.equal(ui.element("freshness-provider").textContent, "Codex Reset");
+  assert.equal(ui.element("pending").textContent, "Unable to verify");
+  assert.match(ui.element("feedback").textContent, /TIBO unavailable/);
+  value.providers.codexReset.state = "stale";
+  value.hint = { ...post, classification: "hint" };
+  ui.render(value);
+  assert.equal(ui.element("hint-report").hidden, true);
+  assert.equal(ui.element("last-context").hidden, false);
+  ui.render(snapshot());
+  assert.equal(ui.element("codex-credit").hidden, true);
+  assert.equal(ui.element("freshness-provider").textContent, "TIBO");
+});
+
+test("projected tool payloads render primary, pending, hint, stale, independent failures and recovery", async () => {
+  const fixture = JSON.parse(await readFile(new URL("./fixtures/codex-reset-feed.json", import.meta.url), "utf8"));
+  const now = Date.parse("2026-10-17T00:13:44Z");
+  const codex = await createCodexResetReader(async () => new Response(JSON.stringify(fixture.body), { headers: fixture.headers }), () => now)();
+  const ui = await dashboard();
+  const scenarios = [
+    () => {},
+    (tibo) => { tibo.pendingAnnouncement = { ...post, id: "new", originalPostUrl: "https://x.com/example/status/999", textExcerpt: "Original announcement" }; },
+    (_, source) => {
+      source.signal.active = true;
+      source.signal.at = new Date(now - 1000).toISOString();
+      source.records.find(record => record.id === source.signal.id).publishedAt = source.signal.at;
+    },
+    (_, source) => { source.state = "unavailable"; source.records = []; source.signal = null; },
+    (tibo) => { tibo.state = "unavailable"; tibo.latestRecordedReset = null; },
+    (tibo, source) => { tibo.state = "stale"; source.state = "stale"; },
+    (tibo, source) => { tibo.state = "unavailable"; tibo.latestRecordedReset = null; source.state = "unavailable"; source.records = []; source.signal = null; },
+    (tibo, source) => {
+      const record = source.records.find(item => item.verificationStatus === "expired");
+      tibo.pendingAnnouncement = { ...post, originalPostUrl: record.originalPostUrl };
+    },
+  ];
+  for (const change of scenarios) {
+    const tibo = snapshot();
+    const source = structuredClone(codex);
+    change(tibo, source);
+    const projected = projectResetRadar(combineResetRadar(tibo, source, now));
+    ui.render(projected);
+    assert.equal(ui.element("codex-credit").hidden, false);
+    assert.equal(ui.element("hint-report").hidden, !projected.hint);
+    if (projected.latestRecordedReset?.textExcerpt) {
+      assert.equal(ui.element("last-state").textContent, projected.latestRecordedReset.textExcerpt);
+    }
+    if (projected.pendingAnnouncement) {
+      assert.equal(ui.element("pending").textContent, projected.pendingAnnouncement.textExcerpt);
+    } else {
+      assert.equal(ui.element("pending").textContent, projected.upcomingState === "available" ? "No announcement reported" : "Unable to verify");
+    }
+    if (source.state !== "available") assert.match(ui.element("feedback").textContent, /Codex Reset/);
+  }
+  const recovered = projectResetRadar(combineResetRadar(snapshot(), codex, now));
+  ui.app.result = async () => ({ structuredContent: recovered });
+  ui.click("refresh");
+  await settled();
+  assert.equal(ui.element("last-state").textContent, excerpt);
+  assert.equal(ui.element("feedback").hidden, true);
+  assert.equal(ui.element("refresh").disabled, false);
+  assert.ok(html.indexOf('id="codex-health"') > html.indexOf('<details'));
+  const footerCredit = html.match(/<p[^>]*id="codex-credit"[\s\S]*?<\/p>/)?.[0];
+  assert.ok(footerCredit);
+  assert.doesNotMatch(footerCredit, /codex-health|available/);
+  assert.match(footerCredit, /href="https:\/\/codex-reset.com\/"/);
 });

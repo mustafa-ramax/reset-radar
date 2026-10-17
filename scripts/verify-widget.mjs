@@ -7,7 +7,8 @@ const required = [
   "<title>Reset Radar</title>",
   'id="refresh"',
   'id="source-link"',
-  "get_tibo_status",
+  "get_reset_radar",
+  "https://codex-reset.com/",
 ];
 
 for (const marker of required) {

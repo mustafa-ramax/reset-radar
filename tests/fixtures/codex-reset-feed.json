@@ -1,0 +1,113 @@
+{
+  "source": "https://codex-reset.com/",
+  "attribution": "Data: codex-reset.com",
+  "capturedAt": "Sat, 17 Oct 2026 00:13:44 GMT",
+  "headers": {
+    "content-type": "application/json; charset=utf-8",
+    "cache-control": "public, max-age=60",
+    "age": null,
+    "date": "Sat, 17 Oct 2026 00:13:44 GMT",
+    "retry-after": null,
+    "x-published-checked-at": "2026-10-17T00:13:18.752Z",
+    "x-published-expires-at": "2026-10-17T00:16:18.752Z",
+    "etag": null
+  },
+  "body": {
+    "version": 1,
+    "fetched_at": "2026-10-17T00:13:17.000Z",
+    "stale": false,
+    "newest_post_at": "2026-10-17T00:01:09.000Z",
+    "source_scope": "timeline",
+    "signal": {
+      "tweet_id": "2106845738814849339",
+      "summary": "I challenge you to do the same\n\nhttps://t.co/aUNDJbJ9y2",
+      "at": "2026-10-04T20:35:42.000Z",
+      "url": "https://x.com/thsottiaux/status/2106845738814849339",
+      "kind": "signal",
+      "is_reply": true,
+      "replying_to": "poteto",
+      "active": false
+    },
+    "tweets": [
+      {
+        "id": "2111244596131111253",
+        "url": "https://x.com/thsottiaux/status/2111244596131111253",
+        "text": "Day 12/\n\nWe’ve made improvements to Codex &amp; Work that increase the effective usage you get. We achieved this by reusing context across subagents, keeping context cached longer, and improved request routing that allows us to increase cache hits.",
+        "at": "2026-10-16T23:55:11.000Z",
+        "kind": "boost"
+      },
+      {
+        "id": "2110595554036400151",
+        "url": "https://x.com/thsottiaux/status/2110595554036400151",
+        "text": "Landing within the next 2 hours",
+        "at": "2026-10-15T04:56:07.000Z",
+        "kind": "signal",
+        "reset_verification_status": "expired"
+      },
+      {
+        "id": "2109873287853707513",
+        "url": "https://x.com/thsottiaux/status/2109873287853707513",
+        "text": "What would you like with your side of reset? It's done. https://t.co/gpNaB6otgy",
+        "at": "2026-10-13T05:06:06.000Z",
+        "kind": "candidate"
+      },
+      {
+        "id": "2109045220411351517",
+        "url": "https://x.com/thsottiaux/status/2109045220411351517",
+        "text": "Day 6/ Reset",
+        "at": "2026-10-10T22:15:39.000Z",
+        "kind": "candidate",
+        "reset_verification_status": "expired"
+      },
+      {
+        "id": "2106845738814849339",
+        "url": "https://x.com/thsottiaux/status/2106845738814849339",
+        "text": "I challenge you to do the same\n\nhttps://t.co/aUNDJbJ9y2",
+        "at": "2026-10-04T20:35:42.000Z",
+        "kind": "signal"
+      }
+    ],
+    "events": [
+      {
+        "id": "2110595554036400151",
+        "url": "https://x.com/thsottiaux/status/2110595554036400151",
+        "group": "reset",
+        "type": "reset",
+        "announcement_state": "announced",
+        "announced_at": "2026-10-15T06:13:01.000Z",
+        "summary": "Day 10 of the 28-day ship-or-reset series: the global reset promised to land “within the next 2 hours” arrived at 06:13 UTC on our checks; Tibo: “Done and dusted.”",
+        "source": "archive"
+      },
+      {
+        "id": "2109873287853707513",
+        "url": "https://x.com/thsottiaux/status/2109873287853707513",
+        "group": "reset",
+        "type": "reset",
+        "announcement_state": "none",
+        "announced_at": "2026-10-13T05:06:06.000Z",
+        "summary": "What would you like with your side of reset? It's done. https://t.co/gpNaB6otgy",
+        "source": "live"
+      },
+      {
+        "id": "2109045220411351517",
+        "url": "https://x.com/thsottiaux/status/2109045220411351517",
+        "group": "reset",
+        "type": "reset",
+        "announcement_state": "none",
+        "announced_at": "2026-10-10T22:15:39.000Z",
+        "summary": "Day 6/ Reset",
+        "source": "live"
+      },
+      {
+        "id": "2106845738814849339",
+        "url": "https://x.com/thsottiaux/status/2106845738814849339",
+        "group": "reset",
+        "type": "reset",
+        "announcement_state": "none",
+        "announced_at": "2026-10-04T20:35:42.000Z",
+        "summary": "I challenge you to do the same\n\nhttps://t.co/aUNDJbJ9y2",
+        "source": "live"
+      }
+    ]
+  }
+}

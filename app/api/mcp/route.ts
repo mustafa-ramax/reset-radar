@@ -8,6 +8,7 @@ import { z } from "zod";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { getTiboStatus } from "../../../lib/tibo-status";
+import { getResetRadar, resetRadarToolResult } from "../../../lib/reset-radar";
 
 // Keep the existing tool identifier for installed plugin compatibility.
 // A new resource URI avoids accidentally loading the cached Hello World iframe.
@@ -25,7 +26,7 @@ const handler = createMcpHandler(
       "show_reset_radar_hello",
       {
         title: "Reset Radar",
-        description: "Open the read-only Reset Radar dashboard in the ChatGPT conversation panel or left sidebar. Shows third-party TIBO status, latest recorded post, source freshness and manual refresh.",
+        description: "Open the read-only Reset Radar dashboard in the ChatGPT conversation panel or left sidebar. TIBO primary evidence and supplemental Codex Reset context. Data: https://codex-reset.com/.",
         inputSchema: z.object({}),
         annotations: { readOnlyHint: true, openWorldHint: false },
         _meta: {
@@ -34,17 +35,26 @@ const handler = createMcpHandler(
         },
       },
       async () => {
-        const status = await getTiboStatus();
-        return {
-          content: [{ type: "text", text: "Reset Radar TIBO status: " + status.state
-            + ". Public source-recorded latest post; personal account reset is not verified." }],
-          structuredContent: { ...status },
-        };
+        const status = await getResetRadar();
+        return resetRadarToolResult(status);
       },
     );
 
-    // Step 1 only: data-only tools use the MCP SDK directly (no UI metadata).
-    // The Hello World MCP App and both entrypoints remain unchanged.
+    // Data-only tools use the MCP SDK directly (no UI metadata).
+    server.registerTool(
+      "get_reset_radar",
+      {
+        title: "Reset Radar combined status",
+        description: "Read TIBO primary evidence and supplemental Codex Reset reports with independent source health and duplicate provenance. Hints are not confirmed announcements. Data: https://codex-reset.com/.",
+        inputSchema: z.object({}),
+        annotations: { readOnlyHint: true, openWorldHint: true },
+      },
+      async () => {
+        const status = await getResetRadar();
+        return resetRadarToolResult(status);
+      },
+    );
+
     server.registerTool(
       "get_tibo_status",
       {

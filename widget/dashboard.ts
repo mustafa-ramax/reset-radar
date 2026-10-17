@@ -17,6 +17,7 @@ type Snapshot = {
   pendingAnnouncement?: Item | null;
   activeWatchPresent?: boolean;
   warning?: string | null;
+  upcomingState?: "available" | "unknown";
 };
 const app = new App({ name: "Reset Radar", version: "0.1.0" });
 const applyHostTheme = (context: McpUiHostContext | undefined) => {
@@ -96,7 +97,8 @@ function render(s: Snapshot) {
   set("health", s.state === "available" ? "Source available" : s.state === "stale" ? "Source stale" : "Source unavailable");
   const post = s.state === "unavailable" ? null : displayItem(s.latestRecordedReset);
   const pending = displayItem(s.pendingAnnouncement);
-  byId("upcoming").dataset.state = s.state !== "available" ? "uncertain" : pending ? "announced" : "quiet";
+  const upcomingAvailable = s.upcomingState ? s.upcomingState === "available" : s.state === "available";
+  byId("upcoming").dataset.state = !upcomingAvailable ? "uncertain" : pending ? "announced" : "quiet";
   const lastState = byId("last-state");
   lastState.textContent = s.state === "unavailable" ? "Unavailable"
     : !post ? "No source record returned"
@@ -115,7 +117,7 @@ function render(s: Snapshot) {
   detail.textContent = post ? "Latest post timestamp: " + prettyTime(post.announcedAt, true)
     + (post.resetType ? " · Source classification: " + post.resetType : "") : "";
 
-  if (s.state !== "available") {
+  if (!upcomingAvailable) {
     set("pending", "Unable to verify");
     byId("pending-detail").hidden = true;
     set("pending-detail", "");
@@ -145,11 +147,68 @@ function render(s: Snapshot) {
   notice(s.state === "stale" ? "TIBO data is stale. Try Refresh."
     : s.state === "unavailable" ? "Source unavailable. Try Refresh." : warning, s.state !== "available");
 }
+function renderCombined(value: unknown): boolean {
+  if (!value || typeof value !== "object") return false;
+  const result = value as Record<string, unknown>;
+  if (result.provider !== "Reset Radar" || !result.providers || typeof result.providers !== "object") return false;
+  const providers = result.providers as Record<string, unknown>;
+  if (!usable(providers.tibo) || !providers.codexReset || typeof providers.codexReset !== "object") return false;
+  const tibo = providers.tibo;
+  const codex = providers.codexReset as Record<string, unknown>;
+  if (codex.provider !== "Codex Reset" || !["available", "stale", "unavailable"].includes(String(codex.state))) return false;
+  const latest = result.latestRecordedReset && typeof result.latestRecordedReset === "object"
+    ? result.latestRecordedReset as Record<string, unknown> : null;
+  const fromCodex = latest?.provider === "Codex Reset";
+  const latestState = fromCodex ? codex.state as Snapshot["state"] : tibo.state;
+  render({ ...tibo, state: latestState, checkedAt: typeof result.checkedAt === "string" ? result.checkedAt : null,
+    latestRecordedReset: displayItem(latest),
+    providerFetchedAt: fromCodex && typeof codex.providerFetchedAt === "string" ? codex.providerFetchedAt : tibo.providerFetchedAt,
+    pendingAnnouncement: tibo.state === "available" ? displayItem(result.pendingAnnouncement) : null,
+    upcomingState: tibo.state === "available" && result.upcomingState === "available" ? "available" : "unknown",
+  });
+  byId("codex-credit").hidden = false;
+  set("freshness-provider", fromCodex ? "Codex Reset" : "TIBO");
+  byId("codex-details").hidden = false;
+  set("latest-provider", fromCodex ? "Source: Codex Reset · fallback"
+    + (latest?.textBasis === "provider summary" ? " · provider summary, not original post text" : "") : "");
+  byId("latest-provider").hidden = !fromCodex;
+  set("codex-health", "Codex Reset: " + codex.state);
+  set("codex-fetched", prettyTime(codex.providerFetchedAt, true));
+  set("codex-published", prettyTime(codex.publishedCheckedAt, true));
+  set("codex-expires", prettyTime(codex.publishedExpiresAt, true));
+  set("health", "TIBO: " + tibo.state);
+  set("source-fetched", prettyTime(tibo.providerFetchedAt, true));
+  const warnings = [tibo.state === "stale" ? "TIBO data is stale. Try Refresh."
+    : tibo.state === "unavailable" ? "TIBO unavailable; upcoming reports are unknown. Try Refresh." : null,
+  codex.state === "stale" ? "Codex Reset data is stale. Try Refresh."
+    : codex.state === "unavailable" ? "Codex Reset unavailable; supplemental coverage is unknown. Try Refresh." : null,
+  tibo.state === "available" && typeof tibo.warning === "string" ? tibo.warning : null,
+  typeof result.upcomingWarning === "string" ? result.upcomingWarning : null];
+  notice(warnings.filter(Boolean).join(" ") || null, warnings.some(Boolean));
+  set("source-warning", [tibo.warning, typeof codex.warning === "string" ? codex.warning : null].filter(Boolean).join(" "));
+  byId("source-warning").hidden = !byId("source-warning").textContent;
+  const hint = displayItem(result.hint);
+  const hintKind = result.hint && typeof result.hint === "object"
+    ? (result.hint as Record<string, unknown>).classification : null;
+  const showHint = codex.state === "available" && hintKind === "hint" && !!hint?.textExcerpt;
+  byId("hint-report").hidden = !showHint;
+  set("hint-text", showHint ? hint!.textExcerpt! : "");
+  set("hint-date", showHint ? "Post date " + prettyTime(hint?.announcedAt) : "");
+  showLink(byId("hint-link") as HTMLAnchorElement, showHint ? hint?.originalPostUrl : null);
+  return true;
+}
 function renderHostError() {
+  clearSupplement();
   render({ provider: "TIBO", state: "unavailable", warning: "Could not reach the Reset Radar MCP tool. Check the plugin connection and try Refresh." });
 }
+function clearSupplement() {
+  set("freshness-provider", "TIBO");
+  for (const id of ["codex-credit", "codex-details", "latest-provider", "hint-report"]) byId(id).hidden = true;
+}
 const renderToolResult = (result: { structuredContent?: unknown; isError?: boolean }) => {
+  if (!result.isError && renderCombined(result.structuredContent)) return true;
   if (!result.isError && usable(result.structuredContent)) {
+    clearSupplement();
     render(result.structuredContent);
     return true;
   }
@@ -162,7 +221,7 @@ async function refresh() {
   refreshButton.disabled = true;
   refreshButton.textContent = "Refreshing…";
   try {
-    const result = await app.callServerTool({ name: "get_tibo_status", arguments: {} });
+    const result = await app.callServerTool({ name: "get_reset_radar", arguments: {} });
     if (!renderToolResult(result)) renderHostError();
   } catch {
     renderHostError();
@@ -180,7 +239,7 @@ app.ontoolresult = result => {
 };
 refreshButton.addEventListener("click", () => { void refresh(); });
 
-for (const element of [link, pendingLink, byId("tibo-link") as HTMLAnchorElement]) {
+for (const element of [link, pendingLink, ...["tibo-link", "codex-link", "hint-link", "hint-credit"].map(id => byId(id) as HTMLAnchorElement)]) {
   element.addEventListener("click", event => {
     const href = (event.currentTarget as HTMLAnchorElement).href;
     if (!safeLink(href)) return;

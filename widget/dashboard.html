@@ -22,19 +22,28 @@
       <p class="report-value" id="pending">Checking reports…</p>
       <p class="detail" id="pending-detail">Reading the current TIBO feed.</p>
       <a class="link" id="pending-link" href="#" hidden>View original source ↗</a>
+      <div id="hint-report" hidden>
+        <p class="detail">Hint only · not a confirmed announcement</p>
+        <p class="report-value" id="hint-text"></p>
+        <p class="post-time" id="hint-date"></p>
+        <a class="link" id="hint-link" hidden>View original source ↗</a>
+        <p class="detail">Data: <a class="link" id="hint-credit" href="https://codex-reset.com/">codex-reset.com</a></p>
+      </div>
       <p id="feedback" role="status" aria-live="polite" class="note" hidden></p>
     </section>
 
     <section class="report latest" aria-labelledby="last-title">
       <h2 id="last-title">Latest reported post</h2>
       <p class="report-value" id="last-state">Loading report…</p>
+      <p class="detail" id="latest-provider" hidden></p>
       <p class="post-time" id="last-time" hidden></p>
       <p class="detail" id="last-context" hidden>Historical evidence · stale source</p>
       <a class="link" id="source-link" href="#" hidden>View original source ↗</a>
     </section>
 
     <footer>
-      <p class="freshness">Source: TIBO · <span id="source-updated">Checking update time…</span></p>
+      <p class="freshness">Source: <span id="freshness-provider">TIBO</span> · <span id="source-updated">Checking update time…</span></p>
+      <p class="freshness" id="codex-credit" hidden>Data: <a class="link" id="codex-link" href="https://codex-reset.com/">codex-reset.com</a></p>
       <details id="source-details">
         <summary>Source details</summary>
         <div class="details-body">
@@ -45,6 +54,13 @@
             <dt>Source fetched</dt><dd class="timestamp" id="source-fetched">Checking…</dd>
             <dt>Radar checked</dt><dd class="timestamp" id="radar-checked">Checking…</dd>
           </dl>
+          <div id="codex-details" hidden>
+            <p class="detail" id="codex-health"></p>
+            <p class="detail">Codex Reset fetched: <span id="codex-fetched"></span></p>
+            <p class="detail">Published copy checked: <span id="codex-published"></span></p>
+            <p class="detail">Published copy expires: <span id="codex-expires"></span></p>
+            <p class="detail">Providers may relay the same original posts. Agreement is not independent confirmation. Hints are not announcements.</p>
+          </div>
           <p class="detail" id="source-warning" hidden></p>
           <p class="detail" id="last-detail" hidden></p>
           <p class="disclaimer">TIBO republishes third-party community observations. Post timestamps may represent publication or observation, not verified reset execution. An empty feed does not prove complete coverage. Announcements are not guarantees, and a reported reset does not confirm changes to your account's limits. Reset Radar is unofficial and unaffiliated with OpenAI. No forecasting or personal quota access.</p>
