@@ -1,9 +1,17 @@
 # Reset Radar — Project Plan
 
-> **Status:** Step 2.5 reliability testing complete; production smoke test owner-accepted · **Last reviewed:** 17 October 2026  
+> **Current status (19 October 2026):** TIBO + Codex Reset Step 3A is merged and owner-accepted in the actual ChatGPT UI. Documentation and open-source preparation are underway. Dependency/security and public-hosting gates remain.  
 > **Repository:** https://github.com/mustafa-ramax/reset-radar  
 > **Target:** Read-only reset data in both ChatGPT conversation panel and left-sidebar app; public plugin later.  
 > **Principle:** Ship an accurate, lightweight read-only radar before adding features.
+
+## Current release scope (supersedes earlier proposals)
+
+**Shipped and accepted:** Upcoming announcements and the Latest reported post, with prominent original text, X links, separate TIBO/Codex Reset source health, manual Refresh, minimalist light/dark ChatGPT UI and honest unknown/stale states. TIBO remains primary. Codex Reset is supplemental, with eligible hints and labelled historical-record fallback. PR #10 is merged (`f448b20`) and has passed the owner's ChatGPT smoke test.
+
+**v0.1 decisions:** No history browser or historical-ledger integration, no predictive signals, no personal quota monitoring and no automatic polling. Active MCP tool IDs are `show_reset_radar_hello`, `get_reset_radar` and `get_tibo_status`. The widget is a self-contained HTML/CSS/TypeScript MCP Apps resource, not a React widget.
+
+**Distribution:** Source code is public but v0.1 GitHub release and Plugin Directory listing are not published. See [README](README.md) and [v0.1 readiness checklist](docs/release-v0.1.md). The historical research and milestone records below are retained for context, and some older "pending" or proposed scope language no longer applies.
 
 ## Early integration milestone — Hello World verified (15–16 October 2026)
 
@@ -43,7 +51,7 @@ Local checks passed: all 10 existing tests, typecheck, production build and self
 
 The owner accepted the styling, and PR #6 is merged. [Issue #7](https://github.com/mustafa-ramax/reset-radar/issues/7) defines the separate Step 4B information-hierarchy follow-up. Website/widget SVG integration does not imply support for MCP app icon metadata. Public directory publication remains out of scope.
 
-## Step 4B — minimalist information hierarchy (17/10/2026; acceptance pending)
+## Step 4B — minimalist information hierarchy (17/10/2026; accepted after follow-up)
 
 Implements [Issue #7](https://github.com/mustafa-ramax/reset-radar/issues/7): upcoming reports first, latest reported post second, a subtle source-update footer and a native collapsed **Source details** disclosure. Uses the existing small radar mark and one understated upcoming surface, with greater emphasis when an announcement is reported. Meaningful latest-post labels stay visible: `recorded` becomes **Recorded post**, `completion` becomes **Completion post reported**, and other types use **Reset-related post reported**. Removes the subtitle, repeated cards, healthy-source badge and default diagnostics. Excerpts, full absolute source/check timestamps, upstream health and one complete attribution/disclaimer are in Details; active-watch information remains in the API only.
 
@@ -53,13 +61,13 @@ Local validation passed: all 10 existing tests, typecheck, production build and 
 
 Vercel preview status and any access limitations are recorded in the PR. Real ChatGPT sidebar, right-panel and inline acceptance remain the owner's separate gate. Do not merge this follow-up until approved.
 
-## Step 4B follow-up — restore primary source content (17/10/2026; review pending)
+## Step 4B follow-up — restore primary source content (17/10/2026; PR #9 merged)
 
 [PR #8](https://github.com/mustafa-ramax/reset-radar/pull/8) is merged. Its collapsed excerpt placement hid the primary evidence from the default view. This focused follow-up restores latest-post and pending-announcement excerpts as primary text, with post dates and original links below. Generic report labels remain fallbacks for missing excerpts. Source details no longer repeats the excerpt. Validated X/Twitter links use **View original X post**; other sources use **View original source**. Text remains safely rendered with the existing 200-character bound. Stale historical evidence and uncertain upcoming/unavailable states retain their existing handling.
 
 All 10 existing tests and eight focused widget regression tests pass, as do typecheck, self-contained CSS/JS validation and the production build. Browser fixtures passed both themes at 280/360/640px with normal and long excerpts, keyboard disclosure/focus, loading, stale/unavailable/partial/invalid states, Refresh and host link handling. Expanded details and 200% text at 280px had no horizontal overflow. Screenshots remain outside the repository. No provider, MCP, Refresh, styling, settings, dependency or infrastructure changes. Vercel Preview status and browser-console limitations are recorded in the new PR; real ChatGPT acceptance remains separate.
 
-## Step 3A — supplemental Codex Reset source (17/10/2026; review pending)
+## Step 3A — supplemental Codex Reset source (17/10/2026; PR #10 merged)
 
 Stage 1 revalidated the live [developer contract](https://codex-reset.com/developers), `/api/feed` and timeline classification. Data: [codex-reset.com](https://codex-reset.com/). See [validation findings and integration decisions](docs/step3a-validation.md), including real overlapping original posts and TIBO's newer latest post missing from the Codex Reset snapshot. PR #9 is merged; source excerpts remain prominent.
 
@@ -69,7 +77,7 @@ Sanitised live fixtures and focused adapter/combination/widget regression tests 
 
 Local validation passed: 34 tests, typecheck, embedded CSS/JS verification and production build. A live JSON-RPC MCP smoke test returned both providers available, 108 Codex Reset records, the unchanged latest TIBO excerpt, and no pending announcement/eligible hint. All three tools and the self-contained resource responded; thread/global metadata remained present. Browser fixtures passed 54 theme/width/state combinations at 280/360/640px without horizontal overflow, plus keyboard disclosure/focus, linked attribution, in-flight Refresh/recovery and 200% text at 280px. Temporary samples, harness and screenshots remain outside the repository. The two existing Zod annotation warnings remain.
 
-PR #10 review follow-up: combined tools now project a compact public status after aggregation and use a short attributed text summary. Full archive records/classifications stay internal; selected excerpts, links, date semantics, independent health/freshness, warnings and bounded selection/duplicate evidence remain public. `get_tibo_status` is untouched. Routine Codex Reset health moves into Source details while linked credit and relevant warnings stay visible. All 40 tests and the full build pass. The committed sanitised fixture's combined result shrinks from 10,408 to 2,215 bytes (78.7%); the captured 108-record result shrinks from 117,607 to 2,214 bytes (98.1%). See the validation note for measurement scope and opener results. Updated preview/screenshots are recorded in the existing PR, which remains unmerged.
+PR #10 review follow-up: combined tools now project a compact public status after aggregation and use a short attributed text summary. Full archive records/classifications stay internal; selected excerpts, links, date semantics, independent health/freshness, warnings and bounded selection/duplicate evidence remain public. `get_tibo_status` is untouched. Routine Codex Reset health moves into Source details while linked credit and relevant warnings stay visible. All 40 tests and the full build pass. The committed sanitised fixture's combined result shrinks from 10,408 to 2,215 bytes (78.7%); the captured 108-record result shrinks from 117,607 to 2,214 bytes (98.1%). See the validation note for measurement scope and opener results. Updated preview/screenshots were recorded in PR #10, which was later merged as `f448b20`. The owner subsequently accepted the actual ChatGPT UI.
 
 Projected-payload browser checks passed the same 54 theme/width/state combinations, plus disclosure/focus, credit links and Refresh recovery. Revised healthy/stale fixtures show the footer at 360px light and 280px dark. The updated production MCP smoke returned both providers stale, retained historical TIBO evidence and warnings, and returned compact human-readable summaries from both combined tools. The original TIBO tool kept its JSON format. All three tools, both entrypoints and embedded resource checks passed. This is local production-build validation, not real ChatGPT acceptance.
 
@@ -124,9 +132,9 @@ To reduce product risk, we started a **minimal Hello World panel test before the
 2. **Latest reset:** Show the newest recorded reset with timestamp, confidence/verification label, original evidence link and provider attribution.
 3. **Tibo signal:** Show a separate announcement card with source link and accurate classification (e.g. explicit plan, hint, policy change). Never turn a hint into a confirmed upcoming reset.
 4. **Honest state model:** Distinguish *upcoming announced*, *hint only*, *recorded*, *no record with complete coverage*, *unknown/stale*, and *provider unavailable*.
-5. **Freshness:** Show last checked/last updated; manual refresh plus conservative auto-refresh while the panel is open (initial target: every 10–15 minutes, subject to host support and upstream freshness).
+5. **Freshness:** Show last checked/last updated and manual Refresh; no automatic polling in v0.1.
 6. **Timezone:** Display in the viewer's IANA timezone when available, with a UTC fallback. Test `Australia/Sydney` and daylight-saving changes.
-7. **Read-only MCP tools:** At least `get_reset_radar` (summary/status) and `get_reset_history` (bounded history), with structured, traceable outputs.
+7. **Read-only MCP tools:** `get_reset_radar` (compact combined status) and `get_tibo_status` (original TIBO status); no history tool in v0.1.
 8. **Attribution:** Link to data providers and primary source posts; clearly state that Reset Radar is unofficial and unaffiliated with OpenAI.
 
 ### Explicitly not in v0.1
@@ -147,7 +155,7 @@ Selected v0.1 sources, based on live tests by the owner's Codex:
 | --- | --- | --- |
 | [tibo.cc/api/v1/status](https://tibo.cc/api/v1/status) | Primary status card | Rich stale/fetch/upstream metadata; it relays other tracker data, not personal-account telemetry. |
 | [codex-reset.com/api/feed](https://codex-reset.com/api/feed) | Captured Tibo announcements | Distinguish current from inactive hints and posts; require attribution. Never treat experimental forecasts as confirmed signals. |
-| [whenresets.net/ledger.json](https://whenresets.net/ledger.json) | Recorded reset history/fallback | Historical feed has some missing original links and ambiguous timestamp meanings; its [source repo](https://github.com/kosanhu2021-source/codex-reset-ledger) is MIT-licensed. |
+| [whenresets.net/ledger.json](https://whenresets.net/ledger.json) | **Not integrated in v0.1** | History features were explicitly dropped; this link is retained only as Phase 0 research context. |
 
 **Not selected for the default integration:** [whenresets.com](https://whenresets.com/developers). Its documented `/api/v1/tibo` returned 404 HTML, `/api/v1/status` lacked advertised signal fields, and `/api/v1/archive` had contract/classification issues in the 15 October test. Reconsider only after revalidation. The similarly spelled `codex-resets.com` (a different upstream mentioned by TIBO) is **not** the same domain as `codex-reset.com`.
 
@@ -185,10 +193,10 @@ ChatGPT conversation side panel
                 └─ Source adapters
                     ├─ tibo.cc status REST
                     ├─ codex-reset.com feed REST
-                    └─ whenresets.net ledger JSON (history)
+                    └─ no historical ledger in v0.1
 ```
 
-- **Frontend:** React + TypeScript UI hosted as an MCP Apps resource; use the standard MCP Apps bridge and OpenAI MCP Extensions for the optional `thread` entrypoint.
+- **Frontend:** Self-contained HTML/CSS/TypeScript widget bundled by Vite, with `thread` and `global` MCP Extensions where supported.
 - **Backend:** Small TypeScript MCP server deployed on Vercel; use the current official MCP/Vercel patterns (including `mcp-handler` if compatible).
 - **Hosting:** One Vercel project, HTTPS endpoint, GitHub automatic deployments once linked.
 - **Storage:** None for MVP; provider APIs and short-lived server cache only.
